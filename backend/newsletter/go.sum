@@ -1,7 +1,7 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0-20260602001039-6c776cc628c5 h1:CI3slzvClzXUauKK7m7CTc2mDqIr+Bbcm8UGyZWmmiU=
-github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0-20260602001039-6c776cc628c5/go.mod h1:M1Q/a9fGB/T8CQsjSXUGxZtcM/d+2qF3o7wDvqHhNyw=
+github.com/trip-manager-htwg/application//backend/shared/middleware v0.0.0-20260602001039-6c776cc628c5 h1:CI3slzvClzXUauKK7m7CTc2mDqIr+Bbcm8UGyZWmmiU=
+github.com/trip-manager-htwg/application//backend/shared/middleware v0.0.0-20260602001039-6c776cc628c5/go.mod h1:M1Q/a9fGB/T8CQsjSXUGxZtcM/d+2qF3o7wDvqHhNyw=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpvNJ1Y=

@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/feed/config"
-	"github.com/ShalArl/trip-manager/backend/feed/internal/consumer"
-	"github.com/ShalArl/trip-manager/backend/feed/internal/feed"
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/shared/middleware"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/trip-manager-htwg/application/backend/feed/config"
+	"github.com/trip-manager-htwg/application/backend/feed/internal/consumer"
+	"github.com/trip-manager-htwg/application/backend/feed/internal/feed"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 )
 
 func main() {

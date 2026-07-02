@@ -6,12 +6,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	generated "github.com/ShalArl/trip-manager/backend/users/generated"
-	"github.com/ShalArl/trip-manager/backend/users/repository"
-	"github.com/ShalArl/trip-manager/backend/users/service"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	generated "github.com/trip-manager-htwg/application/backend/users/generated"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
+	"github.com/trip-manager-htwg/application/backend/users/service"
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -5,10 +5,10 @@ import (
 	"math"
 	"time"
 
-	generated "github.com/ShalArl/trip-manager/backend/feed/generated"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	generated "github.com/trip-manager-htwg/application/backend/feed/generated"
 )
 
 type Repository interface {

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ShalArl/trip-manager/backend/auth/internal/service"
-	"github.com/ShalArl/trip-manager/backend/auth/internal/shared"
+	"github.com/trip-manager-htwg/application/backend/auth/internal/service"
+	"github.com/trip-manager-htwg/application/backend/auth/internal/shared"
 )
 
 // Handler handles auth endpoints

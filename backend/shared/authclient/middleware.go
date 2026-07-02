@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb"
+	"github.com/trip-manager-htwg/application//backend/shared/tenantdb"
 	"net/http"
 )
 

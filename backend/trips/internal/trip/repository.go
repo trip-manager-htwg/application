@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb"
-	dbpool "github.com/ShalArl/trip-manager/backend/trips/internal/database"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
+	dbpool "github.com/trip-manager-htwg/application/backend/trips/internal/database"
 )
 
 // ── Record ────────────────────────────────────────────────────────────────────

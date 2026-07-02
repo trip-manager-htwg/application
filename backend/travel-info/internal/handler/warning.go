@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/ShalArl/trip-manager/backend/travel-info/internal/cache"
+	"github.com/trip-manager-htwg/application//backend/travel-info/internal/cache"
 )
 
 type WarningHandler struct {

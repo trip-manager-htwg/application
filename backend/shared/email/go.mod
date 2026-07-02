@@ -1,3 +1,3 @@
-module github.com/ShalArl/trip-manager/backend/shared/email
+module github.com/trip-manager-htwg/application/backend/shared/email
 
 go 1.25.8

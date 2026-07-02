@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ShalArl/trip-manager/backend/shared/userclient"
-	"github.com/ShalArl/trip-manager/backend/trips/generated"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	"github.com/trip-manager-htwg/application/backend/shared/userclient"
+	"github.com/trip-manager-htwg/application/backend/trips/generated"
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

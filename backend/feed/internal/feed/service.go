@@ -3,7 +3,7 @@ package feed
 import (
 	"context"
 
-	generated "github.com/ShalArl/trip-manager/backend/feed/generated"
+	generated "github.com/trip-manager-htwg/application/backend/feed/generated"
 )
 
 type service struct {

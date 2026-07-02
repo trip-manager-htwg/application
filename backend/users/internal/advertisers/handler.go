@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"tenantdb"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/shared/firebaseclient"
-	"github.com/ShalArl/trip-manager/backend/users/internal/tenant"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
+	"github.com/trip-manager-htwg/application/backend/users/internal/tenant"
 )
 
 func respondJSON(w http.ResponseWriter, status int, data any) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	generated "github.com/ShalArl/trip-manager/backend/trips/generated"
+	generated "github.com/trip-manager-htwg/application/backend/trips/generated"
 )
 
 // ── Service ───────────────────────────────────────────────────────────────────

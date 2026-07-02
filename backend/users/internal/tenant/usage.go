@@ -9,8 +9,8 @@ import (
 	"tenantdb"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/users/internal/platform"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/users/internal/platform"
 )
 
 type UsageResponse struct {

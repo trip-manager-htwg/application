@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/shared/userclient"
-	generated "github.com/ShalArl/trip-manager/backend/trips/generated"
-	"github.com/ShalArl/trip-manager/backend/trips/pubsub"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/userclient"
+	generated "github.com/trip-manager-htwg/application/backend/trips/generated"
+	"github.com/trip-manager-htwg/application/backend/trips/pubsub"
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

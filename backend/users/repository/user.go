@@ -8,10 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
 )
 
 // ── Record ────────────────────────────────────────────────────────────────────

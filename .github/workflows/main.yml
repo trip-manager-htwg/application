@@ -16,39 +16,96 @@ jobs:
   discover-services:
     runs-on: ubuntu-latest
     outputs:
-      backend-matrix: ${{ steps.set-matrix.outputs.matrix }}
-      backend-changed: ${{ steps.set-matrix.outputs.changed }}
-      frontend-changed: 'true'
+        backend-matrix: ${{ steps.set-matrix.outputs.matrix || steps.set-matrix-fallback.outputs.matrix }}
+        backend-changed: ${{ steps.set-matrix.outputs.changed || steps.set-matrix-fallback.outputs.changed }}
+        frontend-changed: ${{ steps.set-frontend.outputs.frontend_changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
+      - name: Filter paths
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
       - name: Set build matrix
         id: set-matrix
+        if: ${{ steps.filter.outputs.backend == 'true' || github.event.inputs.force_rebuild == 'true' }}
+        env:
+          FORCE_REBUILD: ${{ github.event.inputs.force_rebuild }}
         run: |
+          echo "Detecting changed backend services..."
+          
+          # Ensure jq is available
           command -v jq >/dev/null || (sudo apt-get update && sudo apt-get install -y jq)
-
-          services=$(find backend -mindepth 1 -maxdepth 1 -type d | xargs -I{} basename {})
-
+          
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=origin/${{ github.base_ref }}
+          else
+            BASE=${{ github.event.before }}
+          fi
+          
+          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE=$(git rev-parse HEAD^)
+          fi
+          
+          HEAD=${{ github.sha }}
+          echo "Diffing $BASE..$HEAD"
+          
+          if [ "$FORCE_REBUILD" = "true" ]; then
+            echo "⚠️ Manual override active: all Backend-Services will be build!"
+            services=$(find backend -mindepth 1 -maxdepth 1 -type d | xargs -I{} basename {})
+          else
+            files=$(git diff --name-only "$BASE" "$HEAD")
+          
+            if echo "$files" | grep -q '^backend/shared/'; then
+              echo "Shared changed → build all services"
+              services=$(find backend -mindepth 1 -maxdepth 1 -type d | xargs -I{} basename {})
+            else
+              services=$(echo "$files" \
+                | grep '^backend/' \
+                | cut -d/ -f2 \
+                | sort -u)
+            fi
+          fi
+          
+          echo "Changed services:"
+          echo "$services"
+          
+          # Build JSON matrix
           matrix=$(jq -n '{include: []}')
           has_services=false
-
+          
           for service in $services; do
-            { [ "$service" = "shared" ] || [ "$service" = "nginx" ]; } && continue
-
-            if [ ! -f "backend/$service/go.mod" ] || [ ! -f "backend/$service/Dockerfile" ]; then
-              echo "⏭️ Skipping $service (no go.mod or Dockerfile)"
+            path="backend/$service"
+          
+            if [ ! -d "$path" ]; then
+              echo "⏭️ Skipping file in backend root: $service"
               continue
             fi
-
+          
+            { [ "$service" = "shared" ] || [ "$service" = "nginx" ]; } && continue  # Skip shared & nginx
+          
+            path="backend/$service"
+            if [ ! -f "$path/go.mod" ] || [ ! -f "$path/Dockerfile" ]; then
+              echo "❌ ERROR: $service is missing go.mod or Dockerfile"
+              exit 1
+            fi
+          
             echo "✅ $service"
             matrix=$(echo "$matrix" | jq ".include += [{\"service\": \"$service\"}]")
             has_services=true
           done
-
+          
           echo "Final matrix: $matrix"
+          
           {
             echo "matrix<<EOF"
             echo "$matrix"
@@ -56,8 +113,27 @@ jobs:
             echo "changed=$has_services"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Set empty matrix fallback
+        id: set-matrix-fallback
+        if: steps.set-matrix.outcome == 'skipped'
+        run: |
+          echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+
+      - name: Set Frontend Output
+        id: set-frontend
+        run: |
+          if [ "${{ steps.filter.outputs.frontend }}" = "true" ] || [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
+            echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Frontend-Build active."
+          else
+            echo "frontend_changed=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Frontend skipped."
+          fi
+
   build-backend:
     needs: [ discover-services ]
+    if: needs.discover-services.outputs.backend-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 3
@@ -130,6 +206,7 @@ jobs:
 
   build-frontend:
     needs: [ discover-services ]
+    if: needs.discover-services.outputs.frontend-changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -189,7 +266,11 @@ jobs:
 
   deploy:
     needs: [ build-backend, build-frontend ]
-    if: always() && needs.build-backend.result == 'success' && needs.build-frontend.result == 'success'
+    if: |
+      always() &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -199,6 +280,8 @@ jobs:
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             ENV="prod"
+          elif [ "${{ github.ref_name }}" = "dev" ]; then
+            ENV="dev"
           else
             ENV="staging"
           fi
@@ -215,10 +298,11 @@ jobs:
           ref: ${{ steps.ctx.outputs.sha }}
           path: source
 
-      - name: Checkout gitops branch
+      - name: Checkout gitops repo
         uses: actions/checkout@v4
         with:
-          ref: gitops-prod
+          repository: trip-manager-htwg/gitops
+          ssh-key: ${{ secrets.GITOPS_SECRET_KEY }}
           path: gitops-repo
 
       - name: Install Helmfile

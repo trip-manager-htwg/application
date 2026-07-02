@@ -1,3 +1,3 @@
-module github.com/ShalArl/trip-manager/backend/shared/userclient
+module github.com/trip-manager-htwg/application//backend/shared/userclient
 
 go 1.25.8

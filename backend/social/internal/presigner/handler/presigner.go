@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/social/internal/presigner/service"
-	"github.com/ShalArl/trip-manager/backend/social/internal/shared"
+	"github.com/trip-manager-htwg/application//backend/shared/authclient"
+	"github.com/trip-manager-htwg/application//backend/social/internal/presigner/service"
+	"github.com/trip-manager-htwg/application//backend/social/internal/shared"
 )
 
 // GetPresignedUploadURLHandler handles POST /upload-url

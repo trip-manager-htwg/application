@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/ShalArl/trip-manager/backend/trips/database"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/trip-manager-htwg/application/backend/trips/database"
 )
 
 type PoolManager struct {

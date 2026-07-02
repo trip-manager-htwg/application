@@ -6,7 +6,7 @@ metadata:
 spec:
   generators:
     - git:
-        repoURL: https://github.com/ShalArl/trip-manager.git
+        repoURL: https://github.com/trip-manager-htwg/application/.git
         revision: gitops-prod
         directories:
           - path: gitops/prod/*
@@ -21,7 +21,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/ShalArl/trip-manager.git
+        repoURL: https://github.com/trip-manager-htwg/application/.git
         targetRevision: gitops-prod
         path: '{{path}}'
         directory:

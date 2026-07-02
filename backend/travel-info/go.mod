@@ -1,11 +1,11 @@
-module github.com/ShalArl/trip-manager/backend/travel-info
+module github.com/trip-manager-htwg/application//backend/travel-info
 
 go 1.25.8
 
 require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/redis/go-redis/v9 v9.19.0
-	github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0
+	github.com/trip-manager-htwg/application//backend/shared/middleware v0.0.0
 
 )
 
@@ -18,4 +18,4 @@ require (
 	golang.org/x/sys v0.44.0 // indirect
 )
 
-replace github.com/ShalArl/trip-manager/backend/shared/middleware => ../shared/middleware
+replace github.com/trip-manager-htwg/application//backend/shared/middleware => ../shared/middleware

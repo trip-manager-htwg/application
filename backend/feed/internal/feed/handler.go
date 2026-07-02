@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	generated "github.com/ShalArl/trip-manager/backend/feed/generated"
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
+	generated "github.com/trip-manager-htwg/application/backend/feed/generated"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 )
 
 // GetGlobalFeedHandler – HackerNews Score, kein Auth nötig

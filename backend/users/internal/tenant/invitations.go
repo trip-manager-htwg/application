@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb"
 	"github.com/jmoiron/sqlx"
+	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
 )
 
 type Invitation struct {

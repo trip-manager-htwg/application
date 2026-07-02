@@ -9,11 +9,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ShalArl/trip-manager/backend/shared/authclient"
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb"
-	"github.com/ShalArl/trip-manager/backend/users/repository"
-	"github.com/ShalArl/trip-manager/backend/users/service"
 	"github.com/google/uuid"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
+	"github.com/trip-manager-htwg/application/backend/users/service"
 )
 
 type RegisterRequest struct {

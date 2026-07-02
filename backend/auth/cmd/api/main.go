@@ -11,10 +11,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/auth/config"
-	"github.com/ShalArl/trip-manager/backend/auth/internal/handler"
-	"github.com/ShalArl/trip-manager/backend/auth/internal/service"
-	"github.com/ShalArl/trip-manager/backend/shared/middleware"
+	"github.com/trip-manager-htwg/application/backend/auth/config"
+	"github.com/trip-manager-htwg/application/backend/auth/internal/handler"
+	"github.com/trip-manager-htwg/application/backend/auth/internal/service"
+	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 )
 
 func main() {

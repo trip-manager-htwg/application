@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ShalArl/trip-manager/backend/travel-info/internal/cache"
-	"github.com/ShalArl/trip-manager/backend/travel-info/internal/fetcher"
+	"github.com/trip-manager-htwg/application//backend/travel-info/internal/cache"
+	"github.com/trip-manager-htwg/application//backend/travel-info/internal/fetcher"
 )
 
 type WeatherHandler struct {

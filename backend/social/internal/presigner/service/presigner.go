@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/social/internal/presigner/provider"
 	"github.com/google/uuid"
+	"github.com/trip-manager-htwg/application//backend/social/internal/presigner/provider"
 )
 
 type MediaType string

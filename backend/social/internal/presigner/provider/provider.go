@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/social/config"
+	"github.com/trip-manager-htwg/application//backend/social/config"
 )
 
 func NewFromEnv(ctx context.Context, cfg config.Config) (Storage, error) {

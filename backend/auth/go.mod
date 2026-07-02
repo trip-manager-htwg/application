@@ -1,14 +1,14 @@
-module github.com/ShalArl/trip-manager/backend/auth
+module github.com/trip-manager-htwg/application/backend/auth
 
 go 1.25.8
 
 require (
 	firebase.google.com/go/v4 v4.19.0
-	github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/middleware v0.0.0
 )
 
 replace (
-	github.com/ShalArl/trip-manager/backend/shared/middleware => ../shared/middleware
+	github.com/trip-manager-htwg/application/backend/shared/middleware => ../shared/middleware
 )
 
 require (

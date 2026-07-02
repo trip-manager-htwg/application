@@ -1,10 +1,10 @@
-module github.com/ShalArl/trip-manager/backend/feed
+module github.com/trip-manager-htwg/application/backend/feed
 
 go 1.25.8
 
 require (
-	github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0
-	github.com/ShalArl/trip-manager/backend/shared/authclient v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/middleware v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/authclient v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/oapi-codegen/runtime v1.4.1
@@ -16,6 +16,6 @@ require (
 )
 
 replace (
-	github.com/ShalArl/trip-manager/backend/shared/authclient => ../shared/authclient
-	github.com/ShalArl/trip-manager/backend/shared/middleware => ../shared/middleware
+	github.com/trip-manager-htwg/application/backend/shared/authclient => ../shared/authclient
+	github.com/trip-manager-htwg/application/backend/shared/middleware => ../shared/middleware
 )

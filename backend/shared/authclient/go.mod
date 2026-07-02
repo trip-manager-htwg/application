@@ -1,11 +1,11 @@
-module github.com/ShalArl/trip-manager/backend/shared/authclient
+module github.com/trip-manager-htwg/application//backend/shared/authclient
 
 go 1.25.8
 
 require (
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb" v0.0.0
+	"github.com/trip-manager-htwg/application//backend/shared/tenantdb" v0.0.0
 )
 
 replace (
-	"github.com/ShalArl/trip-manager/backend/shared/tenantdb" => ../tenantdb
+	"github.com/trip-manager-htwg/application//backend/shared/tenantdb" => ../tenantdb
 )

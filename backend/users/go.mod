@@ -1,14 +1,14 @@
-module github.com/ShalArl/trip-manager/backend/users
+module github.com/trip-manager-htwg/application/backend/users
 
 go 1.25.8
 
 require (
 	cloud.google.com/go/monitoring v1.29.0
-	github.com/ShalArl/trip-manager/backend/shared/authclient v0.0.0
-	github.com/ShalArl/trip-manager/backend/shared/firebaseclient v0.0.0
-	github.com/ShalArl/trip-manager/backend/shared/middleware v0.0.0
-	github.com/ShalArl/trip-manager/backend/shared/tenantdb v0.0.0
-	github.com/ShalArl/trip-manager/backend/shared/email v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/authclient v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/firebaseclient v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/middleware v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/tenantdb v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/email v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -20,11 +20,11 @@ require (
 )
 
 replace (
-	github.com/ShalArl/trip-manager/backend/shared/authclient => ../shared/authclient
-	github.com/ShalArl/trip-manager/backend/shared/firebaseclient => ../shared/firebaseclient
-	github.com/ShalArl/trip-manager/backend/shared/middleware => ../shared/middleware
-	github.com/ShalArl/trip-manager/backend/shared/tenantdb => ../shared/tenantdb
-	github.com/ShalArl/trip-manager/backend/shared/email => ../shared/email
+	github.com/trip-manager-htwg/application/backend/shared/authclient => ../shared/authclient
+	github.com/trip-manager-htwg/application/backend/shared/firebaseclient => ../shared/firebaseclient
+	github.com/trip-manager-htwg/application/backend/shared/middleware => ../shared/middleware
+	github.com/trip-manager-htwg/application//backend/shared/tenantdb => ../shared/tenantdb
+	github.com/trip-manager-htwg/application//backend/shared/email => ../shared/email
 )
 
 require (

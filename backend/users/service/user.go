@@ -7,8 +7,8 @@ import (
 	"tenantdb"
 	"time"
 
-	"github.com/ShalArl/trip-manager/backend/shared/firebaseclient"
-	"github.com/ShalArl/trip-manager/backend/users/repository"
+	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
 )
 
 // ── Types ─────────────────────────────────────────────────────────────────────

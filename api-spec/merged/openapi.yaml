@@ -1542,6 +1542,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TripCommentResponse'
+    PresignedURLRequest:
+      description: Request for a presigned URL to upload files directly to S3/MinIO
+      type: object
+      required:
+        - fileName
+        - mediaType
+      properties:
+        fileName:
+          type: string
+          description: 'Name of the file to upload (e.g., "avatar.jpg")'
+          example: avatar.jpg
+        mediaType:
+          type: string
+          enum:
+            - avatar
+            - trip
+            - location
+            - activity
+          description: Type of media being uploaded
+    PresignedURLResponse:
+      description: Presigned URL response for direct file uploads
+      type: object
+      required:
+        - presignedUrl
+        - expiresIn
+        - key
+      properties:
+        presignedUrl:
+          type: string
+          format: uri
+          description: URL that can be used to upload the file directly to S3/MinIO
+          example: >-
+            http://minio:9000/trip-manager/avatars/user-id.jpg?X-Amz-Algorithm=...
+        expiresIn:
+          type: integer
+          description: >-
+            Presigned URL expiration time in seconds (typically 900 = 15
+            minutes)
+          example: 900
+        key:
+          type: string
+          description: Object key to reference this upload in subsequent requests
     FeedTrip:
       type: object
       required:
@@ -1591,47 +1633,6 @@ components:
           type: integer
         offset:
           type: integer
-    PresignedURLRequest:
-      description: Request for a presigned URL to upload files directly to S3/MinIO
-      type: object
-      required:
-        - fileName
-        - mediaType
-      properties:
-        fileName:
-          type: string
-          description: 'Name of the file to upload (e.g., "avatar.jpg")'
-          example: avatar.jpg
-        mediaType:
-          type: string
-          enum:
-            - avatar
-            - trip
-            - location
-            - activity
-          description: Type of media being uploaded
-    PresignedURLResponse:
-      description: Presigned URL response for direct file uploads
-      type: object
-      required:
-        - presignedUrl
-        - expiresIn
-        - key
-      properties:
-        presignedUrl:
-          type: string
-          format: uri
-          description: URL that can be used to upload the file directly to S3/MinIO
-          example: >-
-            http://minio:9000/trip-manager/avatars/user-id.jpg?X-Amz-Algorithm=...
-        expiresIn:
-          type: integer
-          description: >-
-            Presigned URL expiration time in seconds (typically 900 = 15
-            minutes)
-          example: 900
-        key:
-          type: string
     NewsletterTrip:
       type: object
       required:
@@ -1705,7 +1706,6 @@ components:
       properties:
         error:
           type: string
-          description: Object key to reference this upload in subsequent requests
   securitySchemes:
     firebaseAuth:
       type: http
