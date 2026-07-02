@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/trip-manager-htwg/application//backend/shared/firebaseclient"
-	"github.com/trip-manager-htwg/application//backend/users/repository"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
 	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
 )
 
 type MemberResponse struct {

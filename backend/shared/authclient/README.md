@@ -11,7 +11,7 @@ Im Social Service (oder anderen Services) `go.mod` hinzufügen:
 ### Basic Usage
 
 ```go
-import "github.com/trip-manager-htwg/application//backend/shared/authclient"
+import "github.com/trip-manager-htwg/application/backend/shared/authclient"
 
 // Create client
 authClient := authclient.NewClient("http://auth:8082")
@@ -31,7 +31,7 @@ userID := result.UserID
 ```go
 import (
   "net/http"
-  "github.com/trip-manager-htwg/application//backend/shared/authclient"
+  "github.com/trip-manager-htwg/application/backend/shared/authclient"
 )
 
 // Setup
@@ -121,7 +121,7 @@ claims := result.Claims
 package main
 
 import (
-  "github.com/trip-manager-htwg/application//backend/auth/pkg/authclient"
+  "github.com/trip-manager-htwg/application/backend/auth/pkg/authclient"
   "github.com/trip-manager-htwg/application//internal/comment"
   "github.com/trip-manager-htwg/application//internal/like"
   // ...

@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/shared/userclient"
-	"github.com/trip-manager-htwg/application//backend/social/internal/shared"
-	"github.com/trip-manager-htwg/application//backend/social/pubsub"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/userclient"
+	"github.com/trip-manager-htwg/application/backend/social/internal/shared"
+	"github.com/trip-manager-htwg/application/backend/social/pubsub"
 )
 
 func enrichCommentsWithUserInfo(ctx context.Context, comments []*CommentResponse, usersClient *userclient.UsersClient) {

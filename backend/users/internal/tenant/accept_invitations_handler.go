@@ -3,9 +3,9 @@ package tenant
 import (
 	"net/http"
 
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/users/repository"
-	"github.com/trip-manager-htwg/application//backend/users/service"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
+	"github.com/trip-manager-htwg/application/backend/users/service"
 )
 
 func AcceptInvitationHandler(invRepo InvitationRepository, userRepo repository.Repository, svc service.Service) http.HandlerFunc {

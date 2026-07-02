@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
-	"github.com/trip-manager-htwg/application//backend/social/internal/shared"
+	"github.com/trip-manager-htwg/application/backend/social/internal/shared"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -12,16 +12,16 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/shared/middleware"
-	"github.com/trip-manager-htwg/application//backend/shared/userclient"
-	"github.com/trip-manager-htwg/application//backend/social/config"
-	"github.com/trip-manager-htwg/application//backend/social/internal/comment"
-	"github.com/trip-manager-htwg/application//backend/social/internal/like"
-	"github.com/trip-manager-htwg/application//backend/social/internal/presigner/handler"
-	presignerPrv "github.com/trip-manager-htwg/application//backend/social/internal/presigner/provider"
-	presignerSvc "github.com/trip-manager-htwg/application//backend/social/internal/presigner/service"
-	"github.com/trip-manager-htwg/application//backend/social/pubsub"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/middleware"
+	"github.com/trip-manager-htwg/application/backend/shared/userclient"
+	"github.com/trip-manager-htwg/application/backend/social/config"
+	"github.com/trip-manager-htwg/application/backend/social/internal/comment"
+	"github.com/trip-manager-htwg/application/backend/social/internal/like"
+	"github.com/trip-manager-htwg/application/backend/social/internal/presigner/handler"
+	presignerPrv "github.com/trip-manager-htwg/application/backend/social/internal/presigner/provider"
+	presignerSvc "github.com/trip-manager-htwg/application/backend/social/internal/presigner/service"
+	"github.com/trip-manager-htwg/application/backend/social/pubsub"
 )
 
 func main() {

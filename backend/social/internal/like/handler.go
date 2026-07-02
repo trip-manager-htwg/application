@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/social/internal/shared"
-	"github.com/trip-manager-htwg/application//backend/social/pubsub"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/social/internal/shared"
+	"github.com/trip-manager-htwg/application/backend/social/pubsub"
 )
 
 // GetTripLikesHandler handles GET /trips/{tripId}/likes (authclient required)

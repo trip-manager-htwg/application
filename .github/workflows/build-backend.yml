@@ -1,0 +1,108 @@
+name: Build Backend
+on:
+  workflow_call:
+    inputs:
+      service:
+        type: string
+        required: true
+      image_tag:
+        type: string
+        required: true
+      registry:
+        type: string
+        default: 'ghcr'  # 'ghcr' or 'gcp'
+      registry_owner:
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Install oapi-codegen CLI
+        run: go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+
+      - name: Add GOPATH to PATH
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run code generation
+        run: pnpm gen
+
+      - name: Log in to GHCR
+        if: inputs.registry == 'ghcr'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate to GCP
+        if: inputs.registry == 'gcp'
+        id: gcp-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+          token_format: access_token
+
+      - name: Log in to Artifact Registry
+        uses: docker/login-action@v4
+        if: inputs.registry == 'gcp'
+        with:
+          registry: ${{ vars.GCP_AR_HOST }}
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Debug inputs
+        run: |
+          echo "registry: ${{ inputs.registry }}"
+          echo "registry_owner: ${{ inputs.registry_owner }}"
+          echo "image_tag: ${{ inputs.image_tag }}"
+
+      - name: Set image name
+        id: image
+        run: |
+          if [ "${{ inputs.registry }}" = "ghcr" ]; then
+            echo "name=ghcr.io/${{ inputs.registry_owner }}/backend/${{ inputs.service }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ secrets.GCP_AR_HOST }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/backend/${{ inputs.service }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=${{ inputs.image_tag }}
+            type=ref,event=branch
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          file: ./backend/${{ inputs.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=backend-${{ inputs.service }}
+          cache-to: type=gha,mode=max,scope=backend-${{ inputs.service }}

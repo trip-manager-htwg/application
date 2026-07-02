@@ -10,14 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/shared/middleware"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/task"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/middleware"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/task"
 
-	"github.com/trip-manager-htwg/application//backend/travel-info/config"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/cache"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/fetcher"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/handler"
+	"github.com/trip-manager-htwg/application/backend/travel-info/config"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/cache"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/fetcher"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/handler"
 )
 
 func main() {

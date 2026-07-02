@@ -1,4 +1,4 @@
-module github.com/trip-manager-htwg/application//backend/social
+module github.com/trip-manager-htwg/application/backend/social
 
 go 1.25.8
 
@@ -6,10 +6,9 @@ require (
 	cloud.google.com/go/firestore v1.22.0
 	cloud.google.com/go/pubsub v1.50.2
 	cloud.google.com/go/storage v1.62.1
-	github.com/trip-manager-htwg/application//backend/presigner v0.0.0-20260602001039-6c776cc628c5
-	github.com/trip-manager-htwg/application//backend/shared/authclient v0.0.0
-	github.com/trip-manager-htwg/application//backend/shared/middleware v0.0.0
-	github.com/trip-manager-htwg/application//backend/shared/userclient v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/authclient v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/middleware v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/userclient v0.0.0
 	github.com/aws/aws-sdk-go-v2 v1.42.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.25
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
@@ -24,10 +23,10 @@ require (
 )
 
 replace (
-	github.com/trip-manager-htwg/application//backend/shared/authclient => ../shared/authclient
-	github.com/trip-manager-htwg/application//backend/shared/middleware => ../shared/middleware
-	github.com/trip-manager-htwg/application//backend/shared/tenantdb => ../shared/tenantdb
-	github.com/trip-manager-htwg/application//backend/shared/userclient => ../shared/userclient
+	github.com/trip-manager-htwg/application/backend/shared/authclient => ../shared/authclient
+	github.com/trip-manager-htwg/application/backend/shared/middleware => ../shared/middleware
+	github.com/trip-manager-htwg/application/backend/shared/tenantdb => ../shared/tenantdb
+	github.com/trip-manager-htwg/application/backend/shared/userclient => ../shared/userclient
 )
 
 require (
@@ -43,7 +42,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.56.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 // indirect
-	github.com/trip-manager-htwg/application//backend/shared/tenantdb v0.0.0 // indirect
+	github.com/trip-manager-htwg/application/backend/shared/tenantdb v0.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.13 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect

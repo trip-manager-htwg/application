@@ -14,8 +14,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/trip-manager-htwg/application//backend/users/repository"
-	"github.com/trip-manager-htwg/application//backend/users/service"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
 	"github.com/trip-manager-htwg/application/backend/shared/middleware"
@@ -25,6 +23,8 @@ import (
 	advertiser "github.com/trip-manager-htwg/application/backend/users/internal/advertisers"
 	"github.com/trip-manager-htwg/application/backend/users/internal/platform"
 	"github.com/trip-manager-htwg/application/backend/users/internal/tenant"
+	"github.com/trip-manager-htwg/application/backend/users/repository"
+	"github.com/trip-manager-htwg/application/backend/users/service"
 )
 
 func main() {

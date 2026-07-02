@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/trip-manager-htwg/application//backend/travel-info/config"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/cache"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/fetcher"
+	"github.com/trip-manager-htwg/application/backend/travel-info/config"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/cache"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/fetcher"
 )
 
 func RunSyncTasks(ctx context.Context, sharedCache *cache.Cache, cfg *config.Config, meteoClient *fetcher.OpenMeteoClient) {

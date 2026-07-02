@@ -40,8 +40,8 @@ github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/cloudmock v0
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/cloudmock v0.56.0/go.mod h1:rqP9UEhOXv9WhQ7Gjz+G5y/pf8+BJZW5/Ts0AhE0PwE=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 h1:0YP0+/ixwu+Uqeu/FGiBZNQ19huiUxxiPXIc9WsLKuQ=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0/go.mod h1:6ZZMQhZKDvUvkJw2rc+oDP90tMMzuU/J+5HG1ZmPOmE=
-github.com/trip-manager-htwg/application//backend/presigner v0.0.0-20260602001039-6c776cc628c5 h1:EOSLLeQ32X3lB/fmcut/q5rmZOuJqFZzfy+e/SKM73g=
-github.com/trip-manager-htwg/application//backend/presigner v0.0.0-20260602001039-6c776cc628c5/go.mod h1:a/+t3wBXiijjAicW73x7lPF5X1lYnV2MwSeYv4GvHF8=
+github.com/trip-manager-htwg/application/backend/presigner v0.0.0-20260602001039-6c776cc628c5 h1:EOSLLeQ32X3lB/fmcut/q5rmZOuJqFZzfy+e/SKM73g=
+github.com/trip-manager-htwg/application/backend/presigner v0.0.0-20260602001039-6c776cc628c5/go.mod h1:a/+t3wBXiijjAicW73x7lPF5X1lYnV2MwSeYv4GvHF8=
 github.com/aws/aws-sdk-go-v2 v1.42.0 h1:XvXMJTkFQtpBKIWZnmr9ZEOc2InWM2yldjXEJ/bymhA=
 github.com/aws/aws-sdk-go-v2 v1.42.0/go.mod h1:27+ACypSLljLAEKsCYOmrjKh83vuTRkuAe9Uv/3A4bg=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.13 h1:p1BBrg/Hhp6uK7zpejeI8QFXHJeC/mynzi04Sl03k9g=

@@ -11,18 +11,18 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/trip-manager-htwg/application//backend/trips/database"
-	"github.com/trip-manager-htwg/application//backend/trips/internal/accommodation"
-	dbpool "github.com/trip-manager-htwg/application//backend/trips/internal/database"
-	"github.com/trip-manager-htwg/application//backend/trips/internal/locations"
-	"github.com/trip-manager-htwg/application//backend/trips/internal/transport"
-	"github.com/trip-manager-htwg/application//backend/trips/internal/trip"
-	"github.com/trip-manager-htwg/application//backend/trips/pubsub"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 	sharedotel "github.com/trip-manager-htwg/application/backend/shared/otel"
 	"github.com/trip-manager-htwg/application/backend/shared/userclient"
 	"github.com/trip-manager-htwg/application/backend/trips/config"
+	"github.com/trip-manager-htwg/application/backend/trips/database"
+	"github.com/trip-manager-htwg/application/backend/trips/internal/accommodation"
+	dbpool "github.com/trip-manager-htwg/application/backend/trips/internal/database"
+	"github.com/trip-manager-htwg/application/backend/trips/internal/locations"
+	"github.com/trip-manager-htwg/application/backend/trips/internal/transport"
+	"github.com/trip-manager-htwg/application/backend/trips/internal/trip"
+	"github.com/trip-manager-htwg/application/backend/trips/pubsub"
 )
 
 func main() {

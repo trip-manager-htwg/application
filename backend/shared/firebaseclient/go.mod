@@ -1,4 +1,4 @@
-module github.com/trip-manager-htwg/application//backend/shared/firebaseclient
+module github.com/trip-manager-htwg/application/backend/shared/firebaseclient
 
 go 1.25.8
 

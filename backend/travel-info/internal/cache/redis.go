@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/trip-manager-htwg/application//backend/travel-info/internal/fetcher"
+	"github.com/trip-manager-htwg/application/backend/travel-info/internal/fetcher"
 )
 
 const (

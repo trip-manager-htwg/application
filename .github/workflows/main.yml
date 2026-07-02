@@ -11,6 +11,18 @@ on:
         description: 'Force rebuild all services'
         type: boolean
         default: false
+      registry:
+        description: 'Image registry to use'
+        type: choice
+        options:
+          - ghcr
+          - gcp
+        default: ghcr
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 
 jobs:
   discover-services:
@@ -19,6 +31,7 @@ jobs:
         backend-matrix: ${{ steps.set-matrix.outputs.matrix || steps.set-matrix-fallback.outputs.matrix }}
         backend-changed: ${{ steps.set-matrix.outputs.changed || steps.set-matrix-fallback.outputs.changed }}
         frontend-changed: ${{ steps.set-frontend.outputs.frontend_changed }}
+        registry: ${{ steps.set-registry.outputs.registry }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -34,6 +47,12 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+
+      - name: Set registry
+        id: set-registry
+        run: |
+          REGISTRY="${{ github.event.inputs.registry }}"
+          echo "registry=${REGISTRY:-ghcr}" >> $GITHUB_OUTPUT
 
       - name: Set build matrix
         id: set-matrix
@@ -91,7 +110,7 @@ jobs:
               continue
             fi
           
-            { [ "$service" = "shared" ] || [ "$service" = "nginx" ]; } && continue  # Skip shared & nginx
+            { [ "$service" = "shared" ]; } && continue  # Skip shared & nginx
           
             path="backend/$service"
             if [ ! -f "$path/go.mod" ] || [ ! -f "$path/Dockerfile" ]; then
@@ -131,138 +150,33 @@ jobs:
             echo "⏭️ Frontend skipped."
           fi
 
+
   build-backend:
-    needs: [ discover-services ]
+    needs: discover-services
     if: needs.discover-services.outputs.backend-changed == 'true'
-    runs-on: ubuntu-latest
     strategy:
       max-parallel: 3
       fail-fast: false
       matrix: ${{ fromJson(needs.discover-services.outputs.backend-matrix) }}
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: docker/setup-buildx-action@v4
-
-      - name: Install oapi-codegen CLI
-        run: go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
-
-      - name: Add GOPATH to PATH
-        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install root dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run code generation
-        run: pnpm gen
-
-      - name: Authenticate to Google Cloud
-        id: gcp-auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
-          token_format: access_token
-
-      - name: Log in to Artifact Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ vars.GCP_AR_HOST }}
-          username: oauth2accesstoken
-          password: ${{ steps.gcp-auth.outputs.access_token }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: |
-            ${{ vars.GCP_AR_HOST }}/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_AR_REPO }}/backend/${{ matrix.service }}
-          tags: |
-            type=sha,format=long
-            type=ref,event=branch
-
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: ./backend
-          file: ./backend/${{ matrix.service }}/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=backend-${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=backend-${{ matrix.service }}
+    uses: ./.github/workflows/build-backend.yml
+    secrets: inherit
+    with:
+      service: ${{ matrix.service }}
+      image_tag: sha-${{ github.sha }}
+      registry: ${{ needs.discover-services.outputs.registry }}
+      registry_owner: ${{ github.repository_owner }}
 
   build-frontend:
-    needs: [ discover-services ]
+    needs: discover-services
     if: needs.discover-services.outputs.frontend-changed == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: docker/setup-buildx-action@v4
+    uses: ./.github/workflows/build-frontend.yml
+    secrets: inherit
+    with:
+      image_tag: sha-${{ github.sha }}
+      registry: ${{ needs.discover-services.outputs.registry }}
+      api_url: ${{ github.ref_name == 'main' && vars.NEXT_PUBLIC_API_URL || vars.NEXT_PUBLIC_API_STAGING_URL }}
+      registry_owner: ${{ github.repository_owner }}
 
-      - name: Authenticate to Google Cloud
-        id: gcp-auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
-          token_format: access_token
-
-      - name: Log in to Artifact Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ vars.GCP_AR_HOST }}
-          username: oauth2accesstoken
-          password: ${{ steps.gcp-auth.outputs.access_token }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ vars.GCP_AR_HOST }}/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_AR_REPO }}/frontend
-          tags: |
-            type=sha,format=long
-            type=ref,event=branch
-
-      - name: Set API URL based on branch
-        id: api-url
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "url=${{ vars.NEXT_PUBLIC_API_URL_GCP }}" >> $GITHUB_OUTPUT
-          else
-            echo "url=${{ vars.NEXT_PUBLIC_API_STAGING_URL_GCP }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.url }}
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          cache-from: type=gha,scope=frontend
 
   deploy:
     needs: [ build-backend, build-frontend ]
@@ -344,5 +258,5 @@ jobs:
             echo "No changes to deploy"
           else
             git commit -m "deploy(${ENVIRONMENT}): ${IMAGE_TAG} (source ${SOURCE_SHA})"
-            git push origin gitops-prod
+            git push origin main
           fi

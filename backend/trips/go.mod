@@ -18,9 +18,9 @@ require (
 replace (
 	github.com/trip-manager-htwg/application/backend/shared/authclient => ../shared/authclient
 	github.com/trip-manager-htwg/application/backend/shared/middleware => ../shared/middleware
-	github.com/trip-manager-htwg/application//backend/shared/userclient => ../shared/userclient
-	github.com/trip-manager-htwg/application//backend/shared/tenantdb => ../shared/tenantdb
-	github.com/trip-manager-htwg/application//backend/shared/otel => ../shared/otel
+	github.com/trip-manager-htwg/application/backend/shared/userclient => ../shared/userclient
+	github.com/trip-manager-htwg/application/backend/shared/tenantdb => ../shared/tenantdb
+	github.com/trip-manager-htwg/application/backend/shared/otel => ../shared/otel
 )
 
 require (

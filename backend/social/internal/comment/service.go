@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/trip-manager-htwg/application//backend/social/internal/shared"
+	"github.com/trip-manager-htwg/application/backend/social/internal/shared"
 )
 
 type Service interface {

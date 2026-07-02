@@ -13,12 +13,12 @@ import (
 	"tenantdb"
 	"time"
 
-	"github.com/trip-manager-htwg/application//backend/newsletter/database"
-	"github.com/trip-manager-htwg/application//backend/newsletter/internal/db"
-	"github.com/trip-manager-htwg/application//backend/newsletter/internal/newsletter"
-	"github.com/trip-manager-htwg/application//backend/shared/authclient"
-	"github.com/trip-manager-htwg/application//backend/shared/email"
-	"github.com/trip-manager-htwg/application//backend/shared/middleware"
+	"github.com/trip-manager-htwg/application/backend/newsletter/database"
+	"github.com/trip-manager-htwg/application/backend/newsletter/internal/db"
+	"github.com/trip-manager-htwg/application/backend/newsletter/internal/newsletter"
+	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	"github.com/trip-manager-htwg/application/backend/shared/email"
+	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
