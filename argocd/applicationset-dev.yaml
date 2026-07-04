@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: trip-manager-cluster-config
+  name: trip-manager-dev
   namespace: argocd
 spec:
   generators:
@@ -9,13 +9,15 @@ spec:
         repoURL: https://github.com/trip-manager-htwg/gitops.git
         revision: main
         directories:
-          - path: prod/cluster-config
+          - path: dev/*
+          - path: dev/external-secrets
+            exclude: true
+          - path: dev/cluster-config
+            exclude: true
   template:
     metadata:
-      name: 'cluster-config'
+      name: 'dev-{{path.basename}}'
       namespace: argocd
-      annotations:
-        argocd.argoproj.io/sync-wave: "1"
     spec:
       project: default
       source:
@@ -26,11 +28,10 @@ spec:
           recurse: true
       destination:
         server: https://kubernetes.default.svc
-        namespace: external-secrets
+        namespace: trip-manager-dev
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-          - ServerSideApply=true

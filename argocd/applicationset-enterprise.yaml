@@ -6,10 +6,10 @@ metadata:
 spec:
   generators:
     - git:
-        repoURL: https://github.com/trip-manager-htwg/application/.git
-        revision: gitops-prod
+        repoURL: https://github.com/trip-manager-htwg/gitops.git
+        revision: main
         directories:
-          - path: gitops/enterprise/*
+          - path: enterprise/*
   template:
     metadata:
       name: 'enterprise-{{path.basename}}'
@@ -17,8 +17,8 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/trip-manager-htwg/application/.git
-        targetRevision: gitops-prod
+        repoURL: https://github.com/trip-manager-htwg/gitops.git
+        targetRevision: main
         path: '{{path}}'
         directory:
           recurse: true
