@@ -43,7 +43,7 @@ env:
   - name: USERS_SERVICE_URL
     value: "http://users.trip-manager-staging.svc.cluster.local:8083"
   - name: GCP_PROJECT_ID
-    value: "project-32c60644-299b-4b05-8cf"
+    value: "staging-demo-502317"
   - name: PUBSUB_TOPIC_ID
     value: "trip-events"
   - name: CORS_ALLOWED_ORIGINS
@@ -53,7 +53,7 @@ env:
   - name: S3_ENDPOINT
     value: "https://storage.googleapis.com"
   - name: S3_BUCKET
-    value: "trip-manager-bucket"
+    value: "staging-demo-502317-trip-manager-bucket"
 
 serviceAccount:
-  gcpServiceAccount: "trips-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "trips-sa@staging-demo-502317.iam.gserviceaccount.com"

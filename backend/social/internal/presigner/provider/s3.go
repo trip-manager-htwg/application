@@ -16,7 +16,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// S3Provider implements PresignProvider for AWS S3/MinIO
 type S3Storage struct {
 	client    *s3.Client
 	presigner *s3.PresignClient
@@ -29,8 +28,8 @@ type S3Storage struct {
 type S3Config struct {
 	Bucket    string
 	Region    string
-	Endpoint  string // Intern: http://minio:9000
-	PublicURL string // Extern: https://travel-nugget.duckdns.org/minio
+	Endpoint  string
+	PublicURL string
 	AccessKey string
 	SecretKey string
 	TTL       time.Duration // Lifetime für Upload/Download URLs, default 15min

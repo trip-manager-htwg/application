@@ -3,11 +3,13 @@ package tenant
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
 	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
+	utils "github.com/trip-manager-htwg/application/backend/users/internal/shared"
 	"github.com/trip-manager-htwg/application/backend/users/repository"
 )
 
@@ -31,13 +33,13 @@ func ListMembersHandler(repo repository.Repository) http.HandlerFunc {
 		}
 
 		if tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		users, err := repo.ListByTenant(ctx)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		var members []MemberResponse
@@ -49,7 +51,7 @@ func ListMembersHandler(repo repository.Repository) http.HandlerFunc {
 		if members == nil {
 			members = []MemberResponse{}
 		}
-		respondJSON(w, http.StatusOK, members)
+		utils.RespondJSON(w, http.StatusOK, members)
 	}
 }
 
@@ -58,11 +60,11 @@ func RemoveMemberHandler(repo repository.Repository, firebaseAuth *firebaseclien
 		tenantID := authclient.GetTenantID(r)
 		role := authclient.GetUserRole(r)
 		if tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 		if role != "tenant_owner" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 		userID := r.PathValue("userId")
@@ -71,21 +73,26 @@ func RemoveMemberHandler(repo repository.Repository, firebaseAuth *firebaseclien
 		// User vor dem Entfernen laden um FirebaseUID zu haben
 		user, err := repo.GetByID(ctx, userID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "user not found")
+			utils.RespondError(w, http.StatusNotFound, "user not found")
 			return
 		}
 
 		if err := repo.RemoveFromTenant(ctx, userID); err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Firebase Claims zurücksetzen
 		if firebaseAuth != nil {
-			go firebaseAuth.SetCustomClaims(context.Background(), user.FirebaseUID, map[string]interface{}{
-				"tenant_id": "default",
-				"role":      "tenant_member",
-			})
+			go func() {
+				err := firebaseAuth.SetCustomClaims(context.Background(), user.FirebaseUID, map[string]interface{}{
+					"tenant_id": "default",
+					"role":      "tenant_member",
+				})
+				if err != nil {
+					log.Printf("failed to reset Firebase claims for user %s: %v", user.FirebaseUID, err)
+				}
+			}()
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -102,22 +109,22 @@ func CreateInvitationHandler(invRepo InvitationRepository, baseURL string, email
 		tenantID := authclient.GetTenantID(r)
 		role := authclient.GetUserRole(r)
 		if tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 		if role != "tenant_owner" && role != "tenant_admin" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 		firebaseUID, _ := authclient.GetUserID(r)
 
 		var req CreateInvitationRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 		if req.Email == "" {
-			respondError(w, http.StatusBadRequest, "email is required")
+			utils.RespondError(w, http.StatusBadRequest, "email is required")
 			return
 		}
 		if req.Role == "" {
@@ -127,7 +134,7 @@ func CreateInvitationHandler(invRepo InvitationRepository, baseURL string, email
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		inv, err := invRepo.Create(ctx, tenantID, req.Email, req.Role, firebaseUID)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -137,11 +144,16 @@ func CreateInvitationHandler(invRepo InvitationRepository, baseURL string, email
 		if emailSvc != nil {
 			tenant, err := tenantRepo.GetByID(ctx, tenantID)
 			if err == nil {
-				go emailSvc.SendInvitation(req.Email, tenant.Name, inviteLink, req.Role)
+				go func() {
+					err := emailSvc.SendInvitation(req.Email, tenant.Name, inviteLink, req.Role)
+					if err != nil {
+						log.Printf("failed to send invitation email to %s: %v", req.Email, err)
+					}
+				}()
 			}
 		}
 
-		respondJSON(w, http.StatusCreated, map[string]interface{}{
+		utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
 			"id":         inv.ID,
 			"email":      inv.Email,
 			"role":       inv.Role,
@@ -155,19 +167,19 @@ func ListInvitationsHandler(invRepo InvitationRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		invitations, err := invRepo.ListByTenant(ctx)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if invitations == nil {
 			invitations = []*Invitation{}
 		}
-		respondJSON(w, http.StatusOK, invitations)
+		utils.RespondJSON(w, http.StatusOK, invitations)
 	}
 }
 
@@ -176,17 +188,17 @@ func DeleteInvitationHandler(invRepo InvitationRepository) http.HandlerFunc {
 		tenantID := authclient.GetTenantID(r)
 		role := authclient.GetUserRole(r)
 		if tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 		if role != "tenant_owner" && role != "tenant_admin" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 		invID := r.PathValue("invitationId")
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		if err := invRepo.Delete(ctx, invID); err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

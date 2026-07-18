@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: trip-manager-enterprise-staging
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/trip-manager-htwg/gitops.git
+        revision: main
+        directories:
+          - path: staging/enterprise/*
+  template:
+    metadata:
+      name: 'staging-enterprise-{{path.basename}}'
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/trip-manager-htwg/gitops.git
+        targetRevision: main
+        path: '{{path}}'
+        directory:
+          recurse: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'trip-manager-staging-{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

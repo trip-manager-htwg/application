@@ -1,10 +1,10 @@
-imageRegistry: "europe-west1-docker.pkg.dev/project-32c60644-299b-4b05-8cf/trip-manager"
+imageRegistry: "ghcr.io/trip-manager-htwg"
 imagePrefix: "backend/"
 imageTag: "dev"
-projectId: "project-32c60644-299b-4b05-8cf"
+projectId: "staging-demo-502317"
 neo4j:
-  enabled: false
+  enabled: true
 feed:
-  enabled: false
+  enabled: true
 newsletter:
-  enabled: false
+  enabled: true

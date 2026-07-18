@@ -8,7 +8,6 @@ import (
 )
 
 // SetupSchema legt Uniqueness Constraints und Indizes an.
-// Läuft idempotent – kann bei jedem Start aufgerufen werden.
 func SetupSchema(ctx context.Context, driver neo4j.DriverWithContext) error {
 	queries := []string{
 		// Uniqueness Constraints (erstellen automatisch auch einen Index)

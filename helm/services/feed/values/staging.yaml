@@ -14,7 +14,7 @@ env:
   - name: OTEL_COLLECTOR_ENDPOINT
     value: "otel-collector.trip-manager-staging.svc.cluster.local:4317"
   - name: GCP_PROJECT_ID
-    value: "project-32c60644-299b-4b05-8cf"
+    value: "staging-demo-502317"
   - name: PUBSUB_SUBSCRIPTION_ID
     value: "trip-events-sub"
 
@@ -33,4 +33,4 @@ envFrom:
       name: feed-secrets
 
 serviceAccount:
-  gcpServiceAccount: "feed-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "feed-sa@staging-demo-502317.iam.gserviceaccount.com"

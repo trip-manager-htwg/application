@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	database "github.com/trip-manager-htwg/application/backend/shared/db"
 	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 	sharedotel "github.com/trip-manager-htwg/application/backend/shared/otel"
 	"github.com/trip-manager-htwg/application/backend/shared/userclient"
 	"github.com/trip-manager-htwg/application/backend/trips/config"
-	"github.com/trip-manager-htwg/application/backend/trips/database"
+	migrations "github.com/trip-manager-htwg/application/backend/trips/database"
 	"github.com/trip-manager-htwg/application/backend/trips/internal/accommodation"
 	dbpool "github.com/trip-manager-htwg/application/backend/trips/internal/database"
 	"github.com/trip-manager-htwg/application/backend/trips/internal/locations"
@@ -50,28 +50,19 @@ func main() {
 	corsConfig.AllowedOrigins = allowedOrigins
 
 	// DB
-	migrationDB, err := sqlx.Connect("postgres", cfg.MigrationDBURL)
-	if err != nil {
-		log.Fatalf("failed to connect to migration db: %v", err)
+	var connectionCfg = database.Config{
+		MigrationDBURL:   cfg.MigrationDBURL,
+		ApplicationDBURL: cfg.DatabaseURL,
+		Vars: map[string]string{
+			"APP_DB_PASSWORD": cfg.AppDBPassword,
+		},
+		Migrations: migrations.EmbeddedMigrations,
 	}
-	if err := database.RunMigrations(migrationDB, map[string]string{
-		"APP_DB_PASSWORD": cfg.AppDBPassword,
-	}); err != nil {
-		log.Fatalf("migration failed: %v", err)
-	}
-	migrationDB.Close()
 
-	// Dann App-Verbindung mit _app User
-	db, err := database.Connect(ctx, cfg.DatabaseURL)
+	db, err := database.Connect(ctx, connectionCfg)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer func(db *sqlx.DB) {
-		err := db.Close()
-		if err != nil {
-			log.Fatalf("failed to close database connection: %v", err)
-		}
-	}(db)
 
 	// PubSub Producer
 	var pubsubProducer *pubsub.Producer
@@ -156,7 +147,7 @@ func main() {
 	mux.HandleFunc("DELETE /{tripId}/locations/{locationId}", requireAuth(locations.DeleteHandler(locationSvc)))
 
 	// Location images
-	mux.HandleFunc("POST /{tripId}/locations/{locationId}/images", requireAuth(locations.AddImageHandler(locationSvc, cfg.S3Endpoint, cfg.S3Bucket)))
+	mux.HandleFunc("POST /{tripId}/locations/{locationId}/images", requireAuth(locations.AddImageHandler(locationSvc)))
 	mux.HandleFunc("DELETE /{tripId}/locations/{locationId}/images/{imageId}", requireAuth(locations.DeleteImageHandler(locationSvc)))
 
 	// Server

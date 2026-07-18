@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -55,7 +57,6 @@ func NewWarningClient(apiURL string) *WarningClient {
 	}
 }
 
-// FetchAll
 func (c *WarningClient) FetchAll(ctx context.Context) (map[string]*WarningEntry, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.apiUrl, nil)
 	if err != nil {
@@ -67,7 +68,12 @@ func (c *WarningClient) FetchAll(ctx context.Context) (map[string]*WarningEntry,
 	if err != nil {
 		return nil, fmt.Errorf("error executing request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error executing request, status code: %d", resp.StatusCode)
 	}

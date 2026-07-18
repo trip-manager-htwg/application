@@ -48,4 +48,4 @@ envFrom:
       name: travel-info-secrets
 
 serviceAccount:
-  gcpServiceAccount: "travel-info-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "travel-info-sa@ornate-reef-501614-a1.iam.gserviceaccount.com"

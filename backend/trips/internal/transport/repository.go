@@ -17,7 +17,6 @@ import (
 
 var (
 	ErrNotFound     = errors.New("not found")
-	ErrUnauthorized = errors.New("unauthorized")
 	ErrInternal     = errors.New("internal error")
 	ErrInvalidInput = errors.New("invalid input")
 )

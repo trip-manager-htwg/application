@@ -35,7 +35,3 @@ func (h *WarningHandler) GetWarning(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusOK, warning)
 }
-
-func (h *WarningHandler) GetWarnings(w http.ResponseWriter, r *http.Request) {
-	respondError(w, http.StatusNotImplemented, "not yet implemented")
-}

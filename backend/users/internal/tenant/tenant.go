@@ -16,7 +16,6 @@ import (
 
 var (
 	ErrNotFound = errors.New("tenant not found")
-	ErrConflict = errors.New("tenant already exists")
 	ErrInternal = errors.New("internal error")
 )
 

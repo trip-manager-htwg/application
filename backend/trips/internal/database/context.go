@@ -1,4 +1,3 @@
-// backend/trips/internal/database/context.go
 package database
 
 import (

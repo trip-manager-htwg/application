@@ -17,6 +17,8 @@ COPY shared/userclient/go.sum shared/middleware/go.sum
 COPY shared/userclient/go.mod shared/userclient/go.mod
 COPY shared/tenantdb/go.mod shared/tenantdb/go.mod
 COPY shared/tenantdb/go.sum shared/tenantdb/go.sum
+COPY shared/db/go.mod shared/db/go.mod
+COPY shared/db/go.sum shared/db/go.sum
 COPY shared/email/go.mod shared/email/go.mod
 COPY shared/email/go.sum shared/email/go.sum
 COPY shared/firebaseclient/go.mod shared/firebaseclient/go.mod

@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
+	openapitypes "github.com/oapi-codegen/runtime/types"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
-	generated "github.com/trip-manager-htwg/application/backend/users/generated"
+	"github.com/trip-manager-htwg/application/backend/users/generated"
 	"github.com/trip-manager-htwg/application/backend/users/repository"
 	"github.com/trip-manager-htwg/application/backend/users/service"
 )
@@ -35,16 +35,16 @@ func toResponse(u *service.User) generated.UserResponse {
 	if u.AvatarKey != "" {
 		avatarUrl = &u.AvatarKey
 	}
-	id := openapi_types.UUID{}
+	id := openapitypes.UUID{}
 	if u.ID != "" {
 		parsed, err := uuid.Parse(u.ID)
 		if err == nil {
-			id = openapi_types.UUID(parsed)
+			id = parsed
 		}
 	}
 	return generated.UserResponse{
 		Id:        &id,
-		Email:     openapi_types.Email(u.Email),
+		Email:     openapitypes.Email(u.Email),
 		Name:      u.Name,
 		Bio:       toPtr(u.Bio),
 		AvatarUrl: avatarUrl,

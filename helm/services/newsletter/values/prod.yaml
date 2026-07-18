@@ -57,4 +57,4 @@ env:
 
 
 serviceAccount:
-  gcpServiceAccount: "newsletter-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "newsletter-sa@ornate-reef-501614-a1.iam.gserviceaccount.com"

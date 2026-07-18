@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -13,10 +14,11 @@ import (
 	"tenantdb"
 	"time"
 
-	"github.com/trip-manager-htwg/application/backend/newsletter/database"
+	migrations "github.com/trip-manager-htwg/application/backend/newsletter/database"
 	"github.com/trip-manager-htwg/application/backend/newsletter/internal/db"
 	"github.com/trip-manager-htwg/application/backend/newsletter/internal/newsletter"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	database "github.com/trip-manager-htwg/application/backend/shared/db"
 	"github.com/trip-manager-htwg/application/backend/shared/email"
 	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 
@@ -75,34 +77,35 @@ func main() {
 	}
 
 	// 2. Datenbanken initialisieren
-	// Haupt-Newsletter-DB (Wird von API und Worker genutzt!)
-	migrationDB, err := sqlx.Connect("postgres", cfg.MigrationDBURL)
+	var connectionCfg = database.Config{
+		ApplicationDBURL: cfg.DatabaseURL,
+		MigrationDBURL:   cfg.MigrationDBURL,
+		Vars: map[string]string{
+			"APP_DB_PASSWORD": cfg.AppDBPassword,
+		},
+		Migrations: migrations.EmbeddedMigrations,
+	}
+
+	newsletterDB, err := database.Connect(ctx, connectionCfg)
 	if err != nil {
-		log.Fatalf("failed to connect to migration db: %v", err)
+		log.Fatalf("failed to connect to database: %v", err)
 	}
-	if err := database.RunMigrations(migrationDB, map[string]string{
-		"APP_DB_PASSWORD": cfg.AppDBPassword,
-	}); err != nil {
-		log.Fatalf("migration failed: %v", err)
-	}
-	migrationDB.Close()
 
 	// 3. Einbindung Email Service
 
 	emailSvc := email.NewService(cfg.ResendApiKey)
-
-	// Normaler Betrieb mit App-User
-	newsletterDB, err := sqlx.Connect("postgres", cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("failed to connect to db: %v", err)
-	}
 
 	// Users-DB (wird nur vom Worker-Teil benötigt)
 	usersDB, err := sqlx.Connect("postgres", cfg.UsersDBURL)
 	if err != nil {
 		log.Fatalf("newsletter: failed to connect to users-db: %v", err)
 	}
-	defer usersDB.Close()
+	defer func(usersDB *sqlx.DB) {
+		err := usersDB.Close()
+		if err != nil {
+			log.Printf("newsletter: failed to close users-db: %v", err)
+		}
+	}(usersDB)
 
 	// 3. Neo4j Treiber initialisieren (für den Worker-Teil)
 	neo4jDriver, err := neo4j.NewDriverWithContext(
@@ -112,7 +115,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("newsletter: failed to create neo4j driver: %v", err)
 	}
-	defer neo4jDriver.Close(ctx)
+	defer func(neo4jDriver neo4j.DriverWithContext, ctx context.Context) {
+		err := neo4jDriver.Close(ctx)
+		if err != nil {
+			log.Printf("newsletter: failed to close neo4j driver: %v", err)
+		}
+	}(neo4jDriver, ctx)
 
 	if err := neo4jDriver.VerifyConnectivity(ctx); err != nil {
 		log.Fatalf("newsletter: neo4j not reachable: %v", err)
@@ -183,7 +191,12 @@ func main() {
 			http.Error(w, `{"error":"failed to load insights"}`, http.StatusInternalServerError)
 			return
 		}
-		defer rows.Close()
+		defer func(rows *sql.Rows) {
+			err := rows.Close()
+			if err != nil {
+				log.Printf("newsletter-worker: failed to close rows: %v", err)
+			}
+		}(rows)
 
 		for rows.Next() {
 			var content json.RawMessage
@@ -197,7 +210,11 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(insights)
+		err = json.NewEncoder(w).Encode(insights)
+		if err != nil {
+			log.Printf("newsletter-worker: failed to encode insights response: %v", err)
+			http.Error(w, `{"error":"failed to encode insights response"}`, http.StatusInternalServerError)
+		}
 	}))
 
 	corsConfig := middleware.DefaultCORSConfig()
@@ -374,7 +391,11 @@ func sendInsightEmails(ctx context.Context, usersDB *sqlx.DB, newsletterDB *sqlx
 		}
 
 		if len(summaries) > 0 {
-			go emailSvc.SendInsightsReport(adv.Email, adv.Name, summaries)
+			go func(email, name string, s []email.InsightSummary) {
+				if err := emailSvc.SendInsightsReport(email, name, s); err != nil {
+					log.Printf("email: failed to send insights: %v", err)
+				}
+			}(adv.Email, adv.Name, summaries)
 		}
 	}
 }

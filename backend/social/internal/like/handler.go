@@ -22,7 +22,7 @@ func GetTripLikesHandler(svc Service) http.HandlerFunc {
 		tenantID := authclient.GetTenantID(r)
 		userID, _ := authclient.GetUserID(r)
 
-		resp, err := svc.GetEntityLikeInfo(r.Context(), userID, tenantID, tripID, TargetTypeTrip)
+		resp, err := svc.GetEntityLikeInfo(r.Context(), userID, tenantID, tripID)
 		if err != nil {
 			shared.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -48,7 +48,7 @@ func LikeTripHandler(svc Service, producer *pubsub.Producer) http.HandlerFunc {
 			return
 		}
 
-		err := svc.LikeEntity(r.Context(), userID, tenantID, tripID, TargetTypeTrip)
+		err := svc.LikeEntity(r.Context(), userID, tenantID, tripID)
 		if err != nil {
 			if errors.Is(err, shared.ErrConflict) {
 				shared.RespondError(w, http.StatusConflict, "already liked")
@@ -88,83 +88,7 @@ func UnlikeTripHandler(svc Service) http.HandlerFunc {
 			return
 		}
 
-		err := svc.UnlikeEntity(r.Context(), userID, tripID, TargetTypeTrip)
-		if err != nil {
-			shared.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-// GetCommentLikesHandler handles GET /comments/{commentId}/likes (authclient required)
-func GetCommentLikesHandler(svc Service) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		commentID := r.PathValue("commentId")
-		if commentID == "" {
-			shared.RespondError(w, http.StatusBadRequest, "Comment ID is required")
-			return
-		}
-		tenantID := authclient.GetTenantID(r)
-		userID, _ := authclient.GetUserID(r)
-
-		resp, err := svc.GetEntityLikeInfo(r.Context(), userID, tenantID, commentID, TargetTypeComment)
-		if err != nil {
-			shared.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		shared.RespondJSON(w, http.StatusOK, resp)
-	}
-}
-
-// LikeCommentHandler handles POST /comments/{commentId}/likes (authclient required)
-func LikeCommentHandler(svc Service) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := authclient.GetUserID(r)
-		if !ok {
-			shared.RespondError(w, http.StatusUnauthorized, "unauthorized")
-			return
-		}
-		tenantID := authclient.GetTenantID(r)
-
-		commentID := r.PathValue("commentId")
-		if commentID == "" {
-			shared.RespondError(w, http.StatusBadRequest, "Comment ID is required")
-			return
-		}
-
-		err := svc.LikeEntity(r.Context(), userID, tenantID, commentID, TargetTypeComment)
-		if err != nil {
-			if errors.Is(err, shared.ErrConflict) {
-				shared.RespondError(w, http.StatusConflict, "already liked")
-				return
-			}
-			shared.RespondError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
-	}
-}
-
-// UnlikeCommentHandler handles DELETE /comments/{commentId}/likes (authclient required)
-func UnlikeCommentHandler(svc Service) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := authclient.GetUserID(r)
-		if !ok {
-			shared.RespondError(w, http.StatusUnauthorized, "unauthorized")
-			return
-		}
-
-		commentID := r.PathValue("commentId")
-		if commentID == "" {
-			shared.RespondError(w, http.StatusBadRequest, "Comment ID is required")
-			return
-		}
-
-		err := svc.UnlikeEntity(r.Context(), userID, commentID, TargetTypeComment)
+		err := svc.UnlikeEntity(r.Context(), userID, tripID)
 		if err != nil {
 			shared.RespondError(w, http.StatusInternalServerError, err.Error())
 			return

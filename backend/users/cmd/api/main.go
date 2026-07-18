@@ -15,10 +15,11 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
+	database "github.com/trip-manager-htwg/application/backend/shared/db"
 	"github.com/trip-manager-htwg/application/backend/shared/firebaseclient"
 	"github.com/trip-manager-htwg/application/backend/shared/middleware"
 	"github.com/trip-manager-htwg/application/backend/users/config"
-	"github.com/trip-manager-htwg/application/backend/users/database"
+	migrations "github.com/trip-manager-htwg/application/backend/users/database"
 	"github.com/trip-manager-htwg/application/backend/users/handler"
 	advertiser "github.com/trip-manager-htwg/application/backend/users/internal/advertisers"
 	"github.com/trip-manager-htwg/application/backend/users/internal/platform"
@@ -52,23 +53,24 @@ func main() {
 	}
 
 	// DB
-	migrationDB, err := sqlx.Connect("postgres", cfg.MigrationDBURL)
-	if err != nil {
-		log.Fatalf("failed to connect to migration db: %v", err)
+	var connectionCfg = database.Config{
+		MigrationDBURL:   cfg.MigrationDBURL,
+		ApplicationDBURL: cfg.DatabaseURL,
+		Vars: map[string]string{
+			"APP_DB_PASSWORD": cfg.AppDBPassword,
+		},
+		Migrations: migrations.EmbeddedMigrations,
 	}
-	if err := database.RunMigrations(migrationDB, map[string]string{
-		"APP_DB_PASSWORD": cfg.AppDBPassword,
-	}); err != nil {
-		log.Fatalf("migration failed: %v", err)
-	}
-	migrationDB.Close()
-
-	// Dann App-Verbindung
-	db, err := database.Connect(ctx, cfg.DatabaseURL)
+	db, err := database.Connect(ctx, connectionCfg)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Printf("failed to close database connection: %v", err)
+		}
+	}(db)
 	// Auth client
 	authClient := authclient.NewClient(cfg.AuthServiceURL)
 
@@ -140,7 +142,7 @@ func main() {
 	mux.HandleFunc("GET /tenants/me/invitations", requireAuth(tenant.ListInvitationsHandler(invRepo)))
 	mux.HandleFunc("POST /tenants/me/invitations", requireAuth(tenant.CreateInvitationHandler(invRepo, cfg.BaseUrl, emailSvc, tenantRepo)))
 	mux.HandleFunc("DELETE /tenants/me/invitations/{invitationId}", requireAuth(tenant.DeleteInvitationHandler(invRepo)))
-	mux.HandleFunc("POST /tenants/join", requireAuth(tenant.AcceptInvitationHandler(invRepo, repo, svc)))
+	mux.HandleFunc("POST /tenants/join", requireAuth(tenant.AcceptInvitationHandler(invRepo, svc)))
 	mux.HandleFunc("GET /tenants/all", requireAuth(tenant.ListAllTenantsHandler(tenantRepo)))
 	mux.HandleFunc("DELETE /tenants/me", requireAuth(tenant.DeleteTenantHandler(tenantRepo, repo, svc)))
 	mux.HandleFunc("GET /tenants/me/usage/timeseries", requireAuth(tenant.GetUsageTimeSeriesHandler(metricsClient)))
@@ -160,7 +162,12 @@ func main() {
 			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"dbUrl": dbURL})
+		err = json.NewEncoder(w).Encode(map[string]string{"dbUrl": dbURL})
+		if err != nil {
+			log.Printf("error encoding db url: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
 	})
 	// ADVERTISER
 	advRepo := advertiser.NewRepository(db)

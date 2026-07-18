@@ -2,11 +2,13 @@ package tenant
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
-	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -25,7 +27,12 @@ func (c *GCMMetricsClient) QueryAPICallsByService(ctx context.Context, tenantID 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create monitoring client: %w", err)
 	}
-	defer client.Close()
+	defer func(client *monitoring.MetricClient) {
+		err := client.Close()
+		if err != nil {
+			log.Printf("failed to close monitoring client: %v", err)
+		}
+	}(client)
 
 	now := time.Now()
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
@@ -44,7 +51,7 @@ func (c *GCMMetricsClient) QueryAPICallsByService(ctx context.Context, tenantID 
 	it := client.ListTimeSeries(ctx, req)
 	for {
 		ts, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
@@ -74,7 +81,12 @@ func (c *GCMMetricsClient) QueryAPICallsTimeSeries(ctx context.Context, tenantID
 	if err != nil {
 		return nil, fmt.Errorf("failed to create monitoring client: %w", err)
 	}
-	defer client.Close()
+	defer func(client *monitoring.MetricClient) {
+		err := client.Close()
+		if err != nil {
+			log.Printf("failed to close monitoring client: %v", err)
+		}
+	}(client)
 
 	now := time.Now()
 	start := now.AddDate(0, 0, -days)
@@ -98,7 +110,7 @@ func (c *GCMMetricsClient) QueryAPICallsTimeSeries(ctx context.Context, tenantID
 	it := client.ListTimeSeries(ctx, req)
 	for {
 		ts, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {

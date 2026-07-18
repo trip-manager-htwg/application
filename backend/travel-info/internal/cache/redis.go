@@ -44,6 +44,10 @@ func NewCache(redisURL string, weatherTTLHours int) (*Cache, error) {
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
+		err := client.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, fmt.Errorf("error connecting to Redis %s: %w", redisURL, err)
 	}
 

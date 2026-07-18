@@ -9,6 +9,7 @@ require (
 	github.com/trip-manager-htwg/application/backend/shared/userclient v0.0.0
 	github.com/trip-manager-htwg/application/backend/shared/tenantdb v0.0.0
 	github.com/trip-manager-htwg/application/backend/shared/otel v0.0.0
+	github.com/trip-manager-htwg/application/backend/shared/db v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.12.3
@@ -21,6 +22,7 @@ replace (
 	github.com/trip-manager-htwg/application/backend/shared/userclient => ../shared/userclient
 	github.com/trip-manager-htwg/application/backend/shared/tenantdb => ../shared/tenantdb
 	github.com/trip-manager-htwg/application/backend/shared/otel => ../shared/otel
+	github.com/trip-manager-htwg/application/backend/shared/db => ../shared/db
 )
 
 require (

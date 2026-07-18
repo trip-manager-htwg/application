@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"tenantdb"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 	"github.com/trip-manager-htwg/application/backend/users/internal/platform"
+	utils "github.com/trip-manager-htwg/application/backend/users/internal/shared"
 )
 
 type UsageResponse struct {
@@ -38,13 +40,13 @@ func GetUsageHandler(repo Repository, metricsClient MetricsClient, platformRepo 
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		serviceMap, err := metricsClient.QueryAPICallsByService(r.Context(), tenantID)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, fmt.Sprintf("failed to query metrics: %v", err))
+			utils.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("failed to query metrics: %v", err))
 			return
 		}
 
@@ -58,7 +60,7 @@ func GetUsageHandler(repo Repository, metricsClient MetricsClient, platformRepo 
 		tenantCtx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(tenantCtx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
@@ -66,7 +68,7 @@ func GetUsageHandler(repo Repository, metricsClient MetricsClient, platformRepo 
 		platformCfg, err := platformRepo.GetConfig(r.Context())
 		if err != nil {
 			// Fallback auf defaults
-			platformCfg = &platform.PlatformConfig{
+			platformCfg = &platform.Config{
 				Free:       platform.PricingConfig{BasePrice: 0, FreeAPICalls: 0, PricePerCall: 0},
 				Standard:   platform.PricingConfig{BasePrice: 29, FreeAPICalls: 10000, PricePerCall: 0.001},
 				Enterprise: platform.PricingConfig{BasePrice: 99, FreeAPICalls: 100000, PricePerCall: 0.0005},
@@ -74,7 +76,7 @@ func GetUsageHandler(repo Repository, metricsClient MetricsClient, platformRepo 
 		}
 
 		pricing := calculatePricing(tenant.Tier, totalCalls, *platformCfg)
-		respondJSON(w, http.StatusOK, UsageResponse{
+		utils.RespondJSON(w, http.StatusOK, UsageResponse{
 			TenantID:  tenantID,
 			Period:    time.Now().Format("2006-01"),
 			APICalls:  totalCalls,
@@ -97,18 +99,18 @@ func GetUsageTimeSeriesHandler(metricsClient MetricsClient) http.HandlerFunc {
 		}
 
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		days := 30
 		data, err := metricsClient.QueryAPICallsTimeSeries(r.Context(), tenantID, days)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, fmt.Sprintf("failed to query time series: %v", err))
+			utils.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("failed to query time series: %v", err))
 			return
 		}
 
-		respondJSON(w, http.StatusOK, data)
+		utils.RespondJSON(w, http.StatusOK, data)
 	}
 }
 
@@ -125,7 +127,12 @@ func queryPrometheus(baseURL, query string) ([]prometheusResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
 
@@ -146,7 +153,10 @@ func queryPrometheus(baseURL, query string) ([]prometheusResult, error) {
 	for _, r := range result.Data.Result {
 		var calls int64
 		if len(r.Value) > 1 {
-			fmt.Sscanf(fmt.Sprintf("%v", r.Value[1]), "%d", &calls)
+			_, err := fmt.Sscanf(fmt.Sprintf("%v", r.Value[1]), "%d", &calls)
+			if err != nil {
+				return nil, err
+			}
 		}
 		out = append(out, prometheusResult{
 			Metric: r.Metric,
@@ -157,7 +167,7 @@ func queryPrometheus(baseURL, query string) ([]prometheusResult, error) {
 }
 
 // usage.go - calculatePricing anpassen
-func calculatePricing(tier string, apiCalls int64, cfg platform.PlatformConfig) PricingInfo {
+func calculatePricing(tier string, apiCalls int64, cfg platform.Config) PricingInfo {
 	var pricingTier platform.PricingConfig
 	switch tier {
 	case "standard":

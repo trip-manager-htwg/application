@@ -6,9 +6,9 @@ import (
 )
 
 type Service interface {
-	GetEntityLikeInfo(ctx context.Context, userID, tenantID, entityID string, kind TargetType) (*EntityLikeResponse, error)
-	LikeEntity(ctx context.Context, userID, tenantID, entityID string, kind TargetType) error
-	UnlikeEntity(ctx context.Context, userID, entityID string, kind TargetType) error
+	GetEntityLikeInfo(ctx context.Context, userID, tenantID, entityID string) (*EntityLikeResponse, error)
+	LikeEntity(ctx context.Context, userID, tenantID, entityID string) error
+	UnlikeEntity(ctx context.Context, userID, entityID string) error
 }
 
 type ServiceImpl struct {
@@ -21,21 +21,21 @@ func NewServiceImpl(repository Repository) Service {
 	}
 }
 
-func (s *ServiceImpl) LikeEntity(ctx context.Context, userID, tenantID, entityID string, kind TargetType) error {
+func (s *ServiceImpl) LikeEntity(ctx context.Context, userID, tenantID, entityID string) error {
 	if err := s.repo.LikeEntity(ctx, userID, tenantID, entityID); err != nil {
 		return fmt.Errorf("failed to like entity: %w", err)
 	}
 	return nil
 }
 
-func (s *ServiceImpl) UnlikeEntity(ctx context.Context, userID, entityID string, kind TargetType) error {
+func (s *ServiceImpl) UnlikeEntity(ctx context.Context, userID, entityID string) error {
 	if err := s.repo.UnlikeEntity(ctx, userID, entityID); err != nil {
 		return fmt.Errorf("failed to unlike entity: %w", err)
 	}
 	return nil
 }
 
-func (s *ServiceImpl) GetEntityLikeInfo(ctx context.Context, userID, tenantID, entityID string, kind TargetType) (*EntityLikeResponse, error) {
+func (s *ServiceImpl) GetEntityLikeInfo(ctx context.Context, userID, tenantID, entityID string) (*EntityLikeResponse, error) {
 	count, err := s.repo.CountEntityLikes(ctx, tenantID, entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count likes: %w", err)

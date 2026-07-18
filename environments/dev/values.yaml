@@ -1,5 +1,4 @@
-imageRegistry: "localhost/trip-manager"
+imageRegistry: "ghcr.io/trip-manager-htwg"
 imagePrefix: "backend/"
-imageTag: "dev"
-projectId: "trip-manager-local"
-imagePullPolicy: "Never"
+imageTag: "main"
+projectId: "staging-demo-502317"

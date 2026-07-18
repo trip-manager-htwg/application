@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/trip-manager-htwg/application/backend/shared/authclient"
 	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
+	utils "github.com/trip-manager-htwg/application/backend/users/internal/shared"
 	"github.com/trip-manager-htwg/application/backend/users/repository"
 	"github.com/trip-manager-htwg/application/backend/users/service"
 )
@@ -39,18 +40,18 @@ func RegisterHandler(repo Repository, userSvc service.Service) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		firebaseUID, ok := authclient.GetUserID(r)
 		if !ok {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		var req RegisterRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
 		if req.TenantName == "" {
-			respondError(w, http.StatusBadRequest, "tenantName is required")
+			utils.RespondError(w, http.StatusBadRequest, "tenantName is required")
 			return
 		}
 
@@ -59,7 +60,7 @@ func RegisterHandler(repo Repository, userSvc service.Service) http.HandlerFunc 
 			tier = "free"
 		}
 		if tier != "free" && tier != "standard" {
-			respondError(w, http.StatusBadRequest, "tier must be free or standard")
+			utils.RespondError(w, http.StatusBadRequest, "tier must be free or standard")
 			return
 		}
 
@@ -75,7 +76,7 @@ func RegisterHandler(repo Repository, userSvc service.Service) http.HandlerFunc 
 		})
 
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -86,11 +87,11 @@ func RegisterHandler(repo Repository, userSvc service.Service) http.HandlerFunc 
 			Role:        "tenant_owner",
 		})
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		respondJSON(w, http.StatusCreated, RegisterResponse{
+		utils.RespondJSON(w, http.StatusCreated, RegisterResponse{
 			TenantID: tenant.ID,
 			Name:     tenant.Name,
 			Slug:     tenant.Slug,
@@ -103,18 +104,18 @@ func GetTenantHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
-		respondJSON(w, http.StatusCreated, RegisterResponse{
+		utils.RespondJSON(w, http.StatusCreated, RegisterResponse{
 			TenantID: tenant.ID,
 			Name:     tenant.Name,
 			Slug:     tenant.Slug,
@@ -127,18 +128,18 @@ func GetTenantBySlugHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := r.PathValue("slug")
 		if slug == "" {
-			respondError(w, http.StatusBadRequest, "slug is required")
+			utils.RespondError(w, http.StatusBadRequest, "slug is required")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), "default")
 		t, err := repo.GetBySlug(ctx, slug)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
-		respondJSON(w, http.StatusOK, RegisterResponse{
+		utils.RespondJSON(w, http.StatusOK, RegisterResponse{
 			TenantID: t.ID,
 			Name:     t.Name,
 			Slug:     t.Slug,
@@ -160,18 +161,18 @@ func GetBrandingHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
-		respondJSON(w, http.StatusOK, tenant.Branding)
+		utils.RespondJSON(w, http.StatusOK, tenant.Branding)
 	}
 }
 
@@ -179,32 +180,32 @@ func UpdateBrandingHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		role := authclient.GetUserRole(r)
 		if role != "tenant_owner" && role != "tenant_admin" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
 		// Branding nur für paid Tiers
 		if tenant.Tier == "free" {
-			respondError(w, http.StatusForbidden, "branding is not available on the free tier")
+			utils.RespondError(w, http.StatusForbidden, "branding is not available on the free tier")
 			return
 		}
 
 		var req BrandingRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
@@ -217,11 +218,11 @@ func UpdateBrandingHandler(repo Repository) http.HandlerFunc {
 
 		updated, err := repo.Update(ctx, tenant)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		respondJSON(w, http.StatusOK, updated.Branding)
+		utils.RespondJSON(w, http.StatusOK, updated.Branding)
 	}
 }
 
@@ -233,7 +234,7 @@ func JoinTenantBySlugHandler(tenantRepo Repository, svc service.Service) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		firebaseUID, ok := authclient.GetUserID(r)
 		if !ok {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
@@ -241,7 +242,7 @@ func JoinTenantBySlugHandler(tenantRepo Repository, svc service.Service) http.Ha
 			Slug string `json:"slug"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
@@ -249,7 +250,7 @@ func JoinTenantBySlugHandler(tenantRepo Repository, svc service.Service) http.Ha
 		ctx := tenantdb.WithTenantID(r.Context(), "default")
 		tenant, err := tenantRepo.GetBySlug(ctx, req.Slug)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
@@ -261,11 +262,11 @@ func JoinTenantBySlugHandler(tenantRepo Repository, svc service.Service) http.Ha
 			Role:        "tenant_member",
 		})
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		respondJSON(w, http.StatusOK, map[string]string{
+		utils.RespondJSON(w, http.StatusOK, map[string]string{
 			"tenantId": tenant.ID,
 			"name":     tenant.Name,
 		})
@@ -276,31 +277,31 @@ func UpgradeTierHandler(repo Repository, provisioner *GitHubProvisioner) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		role := authclient.GetUserRole(r)
 		if role != "tenant_owner" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 
 		var req UpgradeTierRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
 		if req.Tier != "free" && req.Tier != "standard" && req.Tier != "enterprise" {
-			respondError(w, http.StatusBadRequest, "tier must be free, standard or enterprise")
+			utils.RespondError(w, http.StatusBadRequest, "tier must be free, standard or enterprise")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
@@ -308,7 +309,7 @@ func UpgradeTierHandler(repo Repository, provisioner *GitHubProvisioner) http.Ha
 		tenant.Tier = req.Tier
 		updated, err := repo.Update(ctx, tenant)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -331,7 +332,6 @@ func UpgradeTierHandler(repo Repository, provisioner *GitHubProvisioner) http.Ha
 					if err := provisioner.ProvisionEnterpriseTenant(
 						context.Background(),
 						tenant.Slug,
-						tenant.ID,
 						dbPassword,
 					); err != nil {
 						log.Printf("enterprise provisioning failed for %s: %v", tenant.Slug, err)
@@ -363,7 +363,7 @@ func UpgradeTierHandler(repo Repository, provisioner *GitHubProvisioner) http.Ha
 			}
 		}
 
-		respondJSON(w, http.StatusOK, RegisterResponse{
+		utils.RespondJSON(w, http.StatusOK, RegisterResponse{
 			TenantID: updated.ID,
 			Name:     updated.Name,
 			Slug:     updated.Slug,
@@ -376,13 +376,13 @@ func DeleteTenantHandler(repo Repository, userRepo repository.Repository, userSv
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		role := authclient.GetUserRole(r)
 		if role != "tenant_owner" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "only tenant owners can delete a tenant")
+			utils.RespondError(w, http.StatusForbidden, "only tenant owners can delete a tenant")
 			return
 		}
 
@@ -391,13 +391,13 @@ func DeleteTenantHandler(repo Repository, userRepo repository.Repository, userSv
 
 		// Erst alle User auf default zurücksetzen
 		if err := userRepo.ResetTenantUsers(ctx, tenantID); err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Dann Tenant löschen
 		if err := repo.Delete(ctx, tenantID); err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -416,18 +416,18 @@ func ListAllTenantsHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		role := authclient.GetUserRole(r)
 		if role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 		tenants, err := repo.ListAll(r.Context())
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if tenants == nil {
 			tenants = []*Tenant{}
 		}
-		respondJSON(w, http.StatusOK, tenants)
+		utils.RespondJSON(w, http.StatusOK, tenants)
 	}
 }
 
@@ -441,18 +441,18 @@ func GetSettingsHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
-		respondJSON(w, http.StatusOK, tenant.Settings)
+		utils.RespondJSON(w, http.StatusOK, tenant.Settings)
 	}
 }
 
@@ -460,32 +460,32 @@ func UpdateSettingsHandler(repo Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tenantID := authclient.GetTenantID(r)
 		if tenantID == "" || tenantID == "default" {
-			respondError(w, http.StatusNotFound, "no tenant found")
+			utils.RespondError(w, http.StatusNotFound, "no tenant found")
 			return
 		}
 
 		role := authclient.GetUserRole(r)
 		if role != "tenant_owner" && role != "platform_admin" {
-			respondError(w, http.StatusForbidden, "permission denied")
+			utils.RespondError(w, http.StatusForbidden, "permission denied")
 			return
 		}
 
 		ctx := tenantdb.WithTenantID(r.Context(), tenantID)
 		tenant, err := repo.GetByID(ctx, tenantID)
 		if err != nil {
-			respondError(w, http.StatusNotFound, "tenant not found")
+			utils.RespondError(w, http.StatusNotFound, "tenant not found")
 			return
 		}
 
 		// Settings (z.B. maxActiveTrips) sind nur auf Standard+ frei konfigurierbar
 		if tenant.Tier == "free" {
-			respondError(w, http.StatusForbidden, "settings are not configurable on the free tier")
+			utils.RespondError(w, http.StatusForbidden, "settings are not configurable on the free tier")
 			return
 		}
 
 		var req SettingsRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
@@ -498,24 +498,10 @@ func UpdateSettingsHandler(repo Repository) http.HandlerFunc {
 
 		updated, err := repo.Update(ctx, tenant)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		respondJSON(w, http.StatusOK, updated.Settings)
+		utils.RespondJSON(w, http.StatusOK, updated.Settings)
 	}
-}
-
-func respondJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	err := json.NewEncoder(w).Encode(data)
-	if err != nil {
-		log.Fatalf("Failed to encode response: %v", err)
-		return
-	}
-}
-
-func respondError(w http.ResponseWriter, status int, msg string) {
-	respondJSON(w, status, map[string]string{"error": msg})
 }

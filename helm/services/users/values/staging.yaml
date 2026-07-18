@@ -25,17 +25,17 @@ env:
   - name: AUTH_SERVICE_URL
     value: "http://auth.trip-manager-staging.svc.cluster.local:8082"
   - name: STORAGE_BUCKET_URL
-    value: "https://storage.googleapis.com/trip-manager-bucket"
+    value: "https://storage.googleapis.com/staging-demo-502317-trip-manager-bucket"
   - name: CORS_ALLOWED_ORIGINS
     value: "https://staging.neatnode.xyz,https://www.staging.neatnode.xyz"
   - name: OTEL_COLLECTOR_ENDPOINT
     value: "otel-collector.trip-manager-staging.svc.cluster.local:4317"
   - name: GCP_PROJECT_ID
-    value: "project-32c60644-299b-4b05-8cf"
+    value: "staging-demo-502317"
   - name: GITHUB_REPO
-    value: "ShalArl/trip-manager"
+    value: "trip-manager-htwg/application"
   - name: GITHUB_BRANCH
-    value: "gitops-prod" # branch benannt bevor staging dazu kam
+    value: "main" # branch benannt bevor staging dazu kam
   - name: BASE_URL
     value: "https://staging.neatnode.xyz"
 
@@ -60,4 +60,4 @@ envFrom:
       name: users-secrets
 
 serviceAccount:
-  gcpServiceAccount: "users-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "users-sa@staging-demo-502317.iam.gserviceaccount.com"

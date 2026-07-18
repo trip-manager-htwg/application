@@ -31,12 +31,12 @@ externalSecrets:
   enabled: true
   secrets:
     - secretKey: FIREBASE_PROJECT_ID
-      remoteKey: auth-firebase-project-id
+      remoteKey: project-id
 
 envFrom:
   - secretRef:
       name: auth-secrets
 
 serviceAccount:
-  gcpServiceAccount: "auth-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "auth-sa@staging-demo-502317.iam.gserviceaccount.com"
 

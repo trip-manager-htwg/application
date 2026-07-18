@@ -5,42 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
+	openapitypes "github.com/oapi-codegen/runtime/types"
 	"github.com/trip-manager-htwg/application/backend/shared/userclient"
 	"github.com/trip-manager-htwg/application/backend/trips/generated"
+	utils "github.com/trip-manager-htwg/application/backend/trips/internal/shared"
 )
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-func respondJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-func respondError(w http.ResponseWriter, status int, msg string) {
-	respondJSON(w, status, map[string]string{"error": msg})
-}
-
-func getToken(r *http.Request) string {
-	return strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-}
-
-func getIntQuery(r *http.Request, key string, defaultVal int) int {
-	val := r.URL.Query().Get(key)
-	if val == "" {
-		return defaultVal
-	}
-	n, err := strconv.Atoi(val)
-	if err != nil {
-		return defaultVal
-	}
-	return n
-}
+// ── Helpers ───────────────err────────────────────────────────────────────────────
 
 func buildImageURL(s3Endpoint, s3Bucket, key string) string {
 	return fmt.Sprintf("%s/%s/%s", s3Endpoint, s3Bucket, key)
@@ -48,10 +21,10 @@ func buildImageURL(s3Endpoint, s3Bucket, key string) string {
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
-func toImageResponse(img LocationImage, s3Endpoint, s3Bucket string) generated.LocationImageResponse {
+func toImageResponse(img LocationImage) generated.LocationImageResponse {
 	return generated.LocationImageResponse{
-		Id:         openapi_types.UUID(uuid.MustParse(img.ID)),
-		LocationId: openapi_types.UUID(uuid.MustParse(img.LocationID)),
+		Id:         uuid.MustParse(img.ID),
+		LocationId: uuid.MustParse(img.LocationID),
 		ImageUrl:   img.ImageKey,
 		Sequence:   &img.Sequence,
 		CreatedAt:  &img.CreatedAt,
@@ -61,7 +34,7 @@ func toImageResponse(img LocationImage, s3Endpoint, s3Bucket string) generated.L
 func toResponse(l *Location, s3Endpoint, s3Bucket string) generated.LocationResponse {
 	images := make([]generated.LocationImageResponse, len(l.Images))
 	for i, img := range l.Images {
-		images[i] = toImageResponse(img, s3Endpoint, s3Bucket)
+		images[i] = toImageResponse(img)
 	}
 
 	var avatarUrl *string
@@ -81,11 +54,11 @@ func toResponse(l *Location, s3Endpoint, s3Bucket string) generated.LocationResp
 	}
 
 	return generated.LocationResponse{
-		Id: openapi_types.UUID(uuid.MustParse(l.ID)),
+		Id: uuid.MustParse(l.ID),
 		CreatedBy: generated.UserSummary{
-			Id:        openapi_types.UUID(uuid.MustParse(l.CreatedBy.ID)),
+			Id:        uuid.MustParse(l.CreatedBy.ID),
 			Name:      l.CreatedBy.Name,
-			Email:     openapi_types.Email(l.CreatedBy.Email),
+			Email:     openapitypes.Email(l.CreatedBy.Email),
 			AvatarUrl: avatarUrl,
 		},
 		CreatedAt:        l.CreatedAt,
@@ -95,8 +68,8 @@ func toResponse(l *Location, s3Endpoint, s3Bucket string) generated.LocationResp
 		Country:          l.Country,
 		CountryCode:      l.CountryCode,
 		ShortDescription: l.ShortDescription,
-		DateFrom:         openapi_types.Date{Time: l.DateFrom},
-		DateTo:           openapi_types.Date{Time: l.DateTo},
+		DateFrom:         openapitypes.Date{Time: l.DateFrom},
+		DateTo:           openapitypes.Date{Time: l.DateTo},
 		Latitude:         lat,
 		Longitude:        lon,
 		Notes:            l.Notes,
@@ -111,22 +84,22 @@ func ListHandler(svc Service, s3Endpoint, s3Bucket string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tripID := r.PathValue("tripId")
 		if tripID == "" {
-			respondError(w, http.StatusBadRequest, "tripId is required")
+			utils.RespondError(w, http.StatusBadRequest, "tripId is required")
 			return
 		}
-		limit := getIntQuery(r, "limit", 10)
-		offset := getIntQuery(r, "offset", 0)
+		limit := utils.GetIntQuery(r, "limit", 10)
+		offset := utils.GetIntQuery(r, "offset", 0)
 
 		locations, total, err := svc.ListByTrip(r.Context(), tripID, limit, offset)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		data := make([]generated.LocationResponse, len(locations))
 		for i, l := range locations {
 			data[i] = toResponse(l, s3Endpoint, s3Bucket)
 		}
-		respondJSON(w, http.StatusOK, generated.LocationListResponse{
+		utils.RespondJSON(w, http.StatusOK, generated.LocationListResponse{
 			Data:   data,
 			Total:  total,
 			Limit:  limit,
@@ -139,23 +112,23 @@ func CreateHandler(svc Service, usersClient *userclient.UsersClient, s3Endpoint,
 	return func(w http.ResponseWriter, r *http.Request) {
 		tripID := r.PathValue("tripId")
 		if tripID == "" {
-			respondError(w, http.StatusBadRequest, "tripId is required")
+			utils.RespondError(w, http.StatusBadRequest, "tripId is required")
 			return
 		}
-		token := getToken(r)
+		token := utils.GetToken(r)
 		if token == "" {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		user, err := usersClient.GetMe(r.Context(), token)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, "failed to get user")
+			utils.RespondError(w, http.StatusInternalServerError, "failed to get user")
 			return
 		}
 
 		var req generated.CreateLocationRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
@@ -189,13 +162,13 @@ func CreateHandler(svc Service, usersClient *userclient.UsersClient, s3Endpoint,
 		})
 		if err != nil {
 			if errors.Is(err, ErrInvalidInput) {
-				respondError(w, http.StatusBadRequest, err.Error())
+				utils.RespondError(w, http.StatusBadRequest, err.Error())
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		respondJSON(w, http.StatusCreated, toResponse(l, s3Endpoint, s3Bucket))
+		utils.RespondJSON(w, http.StatusCreated, toResponse(l, s3Endpoint, s3Bucket))
 	}
 }
 
@@ -203,13 +176,13 @@ func UpdateHandler(svc Service, s3Endpoint, s3Bucket string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locationID := r.PathValue("locationId")
 		if locationID == "" {
-			respondError(w, http.StatusBadRequest, "locationId is required")
+			utils.RespondError(w, http.StatusBadRequest, "locationId is required")
 			return
 		}
 
 		var req generated.UpdateLocationRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
@@ -243,13 +216,13 @@ func UpdateHandler(svc Service, s3Endpoint, s3Bucket string) http.HandlerFunc {
 		l, err := svc.Update(r.Context(), input)
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "location not found")
+				utils.RespondError(w, http.StatusNotFound, "location not found")
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		respondJSON(w, http.StatusOK, toResponse(l, s3Endpoint, s3Bucket))
+		utils.RespondJSON(w, http.StatusOK, toResponse(l, s3Endpoint, s3Bucket))
 	}
 }
 
@@ -257,31 +230,31 @@ func DeleteHandler(svc Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locationID := r.PathValue("locationId")
 		if locationID == "" {
-			respondError(w, http.StatusBadRequest, "locationId is required")
+			utils.RespondError(w, http.StatusBadRequest, "locationId is required")
 			return
 		}
 		if err := svc.Delete(r.Context(), locationID); err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "location not found")
+				utils.RespondError(w, http.StatusNotFound, "location not found")
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-func AddImageHandler(svc Service, s3Endpoint, s3Bucket string) http.HandlerFunc {
+func AddImageHandler(svc Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locationID := r.PathValue("locationId")
 		if locationID == "" {
-			respondError(w, http.StatusBadRequest, "locationId is required")
+			utils.RespondError(w, http.StatusBadRequest, "locationId is required")
 			return
 		}
 		var req generated.AddLocationImageRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 		seq := 0
@@ -295,17 +268,17 @@ func AddImageHandler(svc Service, s3Endpoint, s3Bucket string) http.HandlerFunc 
 		})
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "location not found")
+				utils.RespondError(w, http.StatusNotFound, "location not found")
 				return
 			}
 			if errors.Is(err, ErrInvalidInput) {
-				respondError(w, http.StatusBadRequest, err.Error())
+				utils.RespondError(w, http.StatusBadRequest, err.Error())
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		respondJSON(w, http.StatusCreated, toImageResponse(*img, s3Endpoint, s3Bucket))
+		utils.RespondJSON(w, http.StatusCreated, toImageResponse(*img))
 	}
 }
 
@@ -313,15 +286,15 @@ func DeleteImageHandler(svc Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		imageID := r.PathValue("imageId")
 		if imageID == "" {
-			respondError(w, http.StatusBadRequest, "imageId is required")
+			utils.RespondError(w, http.StatusBadRequest, "imageId is required")
 			return
 		}
 		if err := svc.DeleteImage(r.Context(), imageID); err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "image not found")
+				utils.RespondError(w, http.StatusNotFound, "image not found")
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

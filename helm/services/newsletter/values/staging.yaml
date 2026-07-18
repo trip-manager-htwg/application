@@ -55,4 +55,4 @@ env:
 
 
 serviceAccount:
-  gcpServiceAccount: "newsletter-sa@project-32c60644-299b-4b05-8cf.iam.gserviceaccount.com"
+  gcpServiceAccount: "newsletter-sa@staging-demo-502317.iam.gserviceaccount.com"

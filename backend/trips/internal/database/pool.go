@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/trip-manager-htwg/application/backend/trips/database"
+	database "github.com/trip-manager-htwg/application/backend/shared/db"
+	migrations "github.com/trip-manager-htwg/application/backend/trips/database"
 )
 
 type PoolManager struct {
@@ -52,7 +54,10 @@ func (p *PoolManager) GetDB(ctx context.Context, tenantID string) *sqlx.DB {
 	if err != nil {
 		p.mu.Lock()
 		if db, ok := p.pools[tenantID]; ok {
-			db.Close()
+			err := db.Close()
+			if err != nil {
+				return nil
+			}
 			delete(p.pools, tenantID)
 		}
 		p.mu.Unlock()
@@ -60,22 +65,16 @@ func (p *PoolManager) GetDB(ctx context.Context, tenantID string) *sqlx.DB {
 	}
 
 	// Superuser URL aus der App-URL ableiten
-
-	// Migration ausführen
-	migrationDB, err := sqlx.Connect("postgres", dbURL) // dbURL = trips_enterprise URL
-	if err != nil {
-		log.Printf("warn: failed to connect to enterprise migration db: %v", err)
-		return p.defaultDB
+	var connectionCfg = database.Config{
+		MigrationDBURL:   dbURL,
+		ApplicationDBURL: dbURL,
+		Vars: map[string]string{
+			"APP_DB_PASSWORD": p.appDBPassword,
+		},
+		Migrations: migrations.EmbeddedMigrations,
 	}
-	if err := database.RunMigrations(migrationDB, map[string]string{
-		"APP_DB_PASSWORD": p.appDBPassword,
-	}); err != nil {
-		log.Printf("warn: enterprise migration failed for tenant %s: %v", tenantID, err)
-	}
-	migrationDB.Close()
 
-	// App-Verbindung aufbauen
-	db, err := sqlx.Connect("postgres", dbURL)
+	db, err := database.Connect(ctx, connectionCfg)
 	if err != nil {
 		log.Printf("warn: failed to connect to enterprise db for tenant %s: %v", tenantID, err)
 		return p.defaultDB
@@ -100,7 +99,12 @@ func (p *PoolManager) fetchEnterpriseDBURL(ctx context.Context, tenantID string)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("not an enterprise tenant")

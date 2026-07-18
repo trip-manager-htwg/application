@@ -10,7 +10,7 @@ import (
 	"github.com/trip-manager-htwg/application/backend/travel-info/internal/fetcher"
 )
 
-func RunSyncTasks(ctx context.Context, sharedCache *cache.Cache, cfg *config.Config, meteoClient *fetcher.OpenMeteoClient) {
+func RunSyncTasks(ctx context.Context, sharedCache *cache.Cache, cfg *config.Config) {
 	log.Println("--- Starting Travel Warnings Sync ---")
 	travelClient := fetcher.NewWarningClient(cfg.TravelWarningUrl)
 

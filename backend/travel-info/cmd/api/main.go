@@ -44,7 +44,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer sharedCache.Close()
+	defer func(sharedCache *cache.Cache) {
+		err := sharedCache.Close()
+		if err != nil {
+			log.Printf("warn: failed to close cache: %v", err)
+		}
+	}(sharedCache)
 
 	meteoClient := fetcher.NewOpenMeteoClient(cfg.WeatherAPIUrl, cfg.WeatherForecastDays)
 
@@ -74,7 +79,7 @@ func main() {
 	// Initialer Sync
 	go func() {
 		log.Println("Running initial background sync...")
-		task.RunSyncTasks(ctx, sharedCache, cfg, meteoClient)
+		task.RunSyncTasks(ctx, sharedCache, cfg)
 	}()
 
 	// Periodischer Sync
@@ -89,7 +94,7 @@ func main() {
 				return
 			case <-ticker.C:
 				log.Println("Triggering periodic background sync...")
-				task.RunSyncTasks(ctx, sharedCache, cfg, meteoClient)
+				task.RunSyncTasks(ctx, sharedCache, cfg)
 			}
 		}
 	}()

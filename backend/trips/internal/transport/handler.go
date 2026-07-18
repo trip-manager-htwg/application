@@ -4,42 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
+	openapitypes "github.com/oapi-codegen/runtime/types"
 	"github.com/trip-manager-htwg/application/backend/shared/userclient"
-	generated "github.com/trip-manager-htwg/application/backend/trips/generated"
+	"github.com/trip-manager-htwg/application/backend/trips/generated"
+	utils "github.com/trip-manager-htwg/application/backend/trips/internal/shared"
 )
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-func respondJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-func respondError(w http.ResponseWriter, status int, msg string) {
-	respondJSON(w, status, map[string]string{"error": msg})
-}
-
-func getToken(r *http.Request) string {
-	return strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-}
-
-func getIntQuery(r *http.Request, key string, defaultVal int) int {
-	val := r.URL.Query().Get(key)
-	if val == "" {
-		return defaultVal
-	}
-	n, err := strconv.Atoi(val)
-	if err != nil {
-		return defaultVal
-	}
-	return n
-}
 
 // ── Mapper ────────────────────────────────────────────────────────────────────
 
@@ -66,11 +37,11 @@ func toResponse(t *Transport) generated.TransportResponse {
 	to := toPlaceSummary(t.To)
 
 	return generated.TransportResponse{
-		Id: openapi_types.UUID(id),
+		Id: id,
 		CreatedBy: generated.UserSummary{
-			Id:    openapi_types.UUID(creatorID),
+			Id:    creatorID,
 			Name:  t.CreatedBy.Name,
-			Email: openapi_types.Email(t.CreatedBy.Email),
+			Email: openapitypes.Email(t.CreatedBy.Email),
 		},
 		CreatedAt:     t.CreatedAt,
 		UpdatedAt:     t.UpdatedAt,
@@ -89,22 +60,22 @@ func ListHandler(svc Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tripID := r.PathValue("tripId")
 		if tripID == "" {
-			respondError(w, http.StatusBadRequest, "tripId is required")
+			utils.RespondError(w, http.StatusBadRequest, "tripId is required")
 			return
 		}
-		limit := getIntQuery(r, "limit", 10)
-		offset := getIntQuery(r, "offset", 0)
+		limit := utils.GetIntQuery(r, "limit", 10)
+		offset := utils.GetIntQuery(r, "offset", 0)
 
 		transports, total, err := svc.ListByTrip(r.Context(), tripID, limit, offset)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		data := make([]generated.TransportResponse, len(transports))
 		for i, t := range transports {
 			data[i] = toResponse(t)
 		}
-		respondJSON(w, http.StatusOK, generated.TransportListResponse{
+		utils.RespondJSON(w, http.StatusOK, generated.TransportListResponse{
 			Data:   data,
 			Total:  total,
 			Limit:  limit,
@@ -117,36 +88,36 @@ func CreateHandler(svc Service, usersClient *userclient.UsersClient) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		tripID := r.PathValue("tripId")
 		if tripID == "" {
-			respondError(w, http.StatusBadRequest, "tripId is required")
+			utils.RespondError(w, http.StatusBadRequest, "tripId is required")
 			return
 		}
-		token := getToken(r)
+		token := utils.GetToken(r)
 		if token == "" {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		user, err := usersClient.GetMe(r.Context(), token)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, "failed to get user")
+			utils.RespondError(w, http.StatusInternalServerError, "failed to get user")
 			return
 		}
 
 		var req generated.CreateTransportRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
 		t, err := svc.Create(r.Context(), &req, tripID, user.ID, user.Name, user.Email)
 		if err != nil {
 			if errors.Is(err, ErrInvalidInput) {
-				respondError(w, http.StatusBadRequest, err.Error())
+				utils.RespondError(w, http.StatusBadRequest, err.Error())
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		respondJSON(w, http.StatusCreated, toResponse(t))
+		utils.RespondJSON(w, http.StatusCreated, toResponse(t))
 	}
 }
 
@@ -154,36 +125,36 @@ func UpdateHandler(svc Service, usersClient *userclient.UsersClient) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		transportID := r.PathValue("transportId")
 		if transportID == "" {
-			respondError(w, http.StatusBadRequest, "transportId is required")
+			utils.RespondError(w, http.StatusBadRequest, "transportId is required")
 			return
 		}
-		token := getToken(r)
+		token := utils.GetToken(r)
 		if token == "" {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		user, err := usersClient.GetMe(r.Context(), token)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, "failed to get user")
+			utils.RespondError(w, http.StatusInternalServerError, "failed to get user")
 			return
 		}
 
 		var req generated.UpdateTransportRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			respondError(w, http.StatusBadRequest, "invalid request body")
+			utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}
 
 		t, err := svc.Update(r.Context(), &req, transportID, user.ID)
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "transport not found")
+				utils.RespondError(w, http.StatusNotFound, "transport not found")
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		respondJSON(w, http.StatusOK, toResponse(t))
+		utils.RespondJSON(w, http.StatusOK, toResponse(t))
 	}
 }
 
@@ -191,26 +162,26 @@ func DeleteHandler(svc Service, usersClient *userclient.UsersClient) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		transportID := r.PathValue("transportId")
 		if transportID == "" {
-			respondError(w, http.StatusBadRequest, "transportId is required")
+			utils.RespondError(w, http.StatusBadRequest, "transportId is required")
 			return
 		}
-		token := getToken(r)
+		token := utils.GetToken(r)
 		if token == "" {
-			respondError(w, http.StatusUnauthorized, "unauthorized")
+			utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		user, err := usersClient.GetMe(r.Context(), token)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, "failed to get user")
+			utils.RespondError(w, http.StatusInternalServerError, "failed to get user")
 			return
 		}
 
 		if err := svc.Delete(r.Context(), transportID, user.ID); err != nil {
 			if errors.Is(err, ErrNotFound) {
-				respondError(w, http.StatusNotFound, "transport not found")
+				utils.RespondError(w, http.StatusNotFound, "transport not found")
 				return
 			}
-			respondError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

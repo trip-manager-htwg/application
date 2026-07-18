@@ -47,10 +47,9 @@ type User struct {
 // ── Errors ────────────────────────────────────────────────────────────────────
 
 var (
-	ErrNotFound     = errors.New("not found")
-	ErrConflict     = errors.New("conflict")
-	ErrInternal     = errors.New("internal error")
-	ErrInvalidInput = errors.New("invalid input")
+	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("conflict")
+	ErrInternal = errors.New("internal error")
 )
 
 // ── Mapper ────────────────────────────────────────────────────────────────────

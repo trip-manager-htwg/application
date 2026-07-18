@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -35,7 +36,12 @@ func (g *GitHubProvisioner) createGCPSecret(ctx context.Context, secretName, val
 	if err != nil {
 		return fmt.Errorf("failed to create secret manager client: %w", err)
 	}
-	defer client.Close()
+	defer func(client *secretmanager.Client) {
+		err := client.Close()
+		if err != nil {
+			log.Printf("failed to close secret manager client: %v", err)
+		}
+	}(client)
 
 	// Secret erstellen
 	_, err = client.CreateSecret(ctx, &secretmanagerpb.CreateSecretRequest{
@@ -85,7 +91,7 @@ func generateDBPassword() string {
 	return fmt.Sprintf("ent-%d", time.Now().UnixNano())
 }
 
-func (g *GitHubProvisioner) ProvisionEnterpriseTenant(ctx context.Context, tenantSlug, tenantID, dbPassword string) error {
+func (g *GitHubProvisioner) ProvisionEnterpriseTenant(ctx context.Context, tenantSlug, dbPassword string) error {
 	secretName := fmt.Sprintf("enterprise-%s-db-password", tenantSlug)
 
 	// 1. Passwort in GCP Secret Manager speichern
@@ -240,13 +246,22 @@ func (g *GitHubProvisioner) createOrUpdateFile(ctx context.Context, path, conten
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+g.Token)
 	req.Header.Set("Accept", "application/vnd.github+json")
-	if resp, err := http.DefaultClient.Do(req); err == nil && resp.StatusCode == 200 {
-		var existing struct {
-			SHA string `json:"sha"`
+	if resp, err := http.DefaultClient.Do(req); err == nil {
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				log.Printf("failed to close response body: %v", err)
+			}
+		}(resp.Body)
+		if resp.StatusCode == 200 {
+			var existing struct {
+				SHA string `json:"sha"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&existing); err != nil {
+				return err
+			}
+			existingSHA = existing.SHA
 		}
-		json.NewDecoder(resp.Body).Decode(&existing)
-		existingSHA = existing.SHA
-		resp.Body.Close()
 	}
 
 	body := map[string]interface{}{
@@ -269,7 +284,12 @@ func (g *GitHubProvisioner) createOrUpdateFile(ctx context.Context, path, conten
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		body, _ := io.ReadAll(resp.Body)
@@ -307,7 +327,12 @@ func (g *GitHubProvisioner) listFiles(ctx context.Context, path string) ([]githu
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode == 404 {
 		return nil, nil
@@ -345,6 +370,11 @@ func (g *GitHubProvisioner) deleteFile(ctx context.Context, path, sha, message s
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(resp.Body)
 	return nil
 }

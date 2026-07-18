@@ -30,5 +30,6 @@ func (c *PrometheusMetricsClient) QueryAPICallsByService(ctx context.Context, te
 }
 
 func (c *PrometheusMetricsClient) QueryAPICallsTimeSeries(ctx context.Context, tenantID string, days int) ([]DailyAPICall, error) {
-	return nil, fmt.Errorf("not implemented")
+	//TODO implement me
+	panic("implement me")
 }

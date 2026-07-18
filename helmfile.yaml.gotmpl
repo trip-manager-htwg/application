@@ -6,11 +6,11 @@ environments:
   staging:
     values:
       - environments/staging/values.yaml
-    kubeContext: gke_project-32c60644-299b-4b05-8cf_europe-west1_trip-manager-prod
+    kubeContext: gke_staging-demo-502317_europe-west1_trip-manager-staging
   prod:
     values:
       - environments/prod/values.yaml
-    kubeContext: gke_project-32c60644-299b-4b05-8cf_europe-west1_trip-manager-prod
+    kubeContext: gke_ornate-reef-501614-a1_europe-west1_trip-manager-prod
 ---
 
 repositories:
@@ -37,7 +37,7 @@ releases:
       - serviceAccount:
           annotations:
             iam.gke.io/gcp-service-account: "external-secrets-sa@{{ .Values.projectId }}.iam.gserviceaccount.com"
-    installed: {{ eq .Environment.Name "prod" }}
+    installed: {{ ne .Environment.Name "dev" }}
 
   - name: ingress-nginx
     namespace: ingress-nginx
@@ -62,12 +62,11 @@ releases:
     values:
       - helm/cluster-config/values.yaml
       - helm/cluster-config/values/{{ .Environment.Name }}.yaml
-    installed: {{ eq .Environment.Name "prod" }}
+    installed: {{ ne .Environment.Name "dev" }}
     needs:
       - external-secrets/external-secrets
 
   # Infrastructure
-
 
   - name: redis
     namespace: trip-manager-{{ .Environment.Name }}
@@ -117,8 +116,6 @@ releases:
     set:
       - name: environment
         value: {{ .Environment.Name }}
-      - name: gcpProjectID
-        value: project-32c60644-299b-4b05-8cf
 
   - name: prometheus
     namespace: trip-manager-{{ .Environment.Name }}

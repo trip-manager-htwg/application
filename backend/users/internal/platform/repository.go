@@ -2,8 +2,10 @@ package platform
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/trip-manager-htwg/application/backend/shared/tenantdb"
@@ -15,14 +17,14 @@ type PricingConfig struct {
 	PricePerCall float64 `json:"pricePerCall"`
 }
 
-type PlatformConfig struct {
+type Config struct {
 	Free       PricingConfig `json:"free"`
 	Standard   PricingConfig `json:"standard"`
 	Enterprise PricingConfig `json:"enterprise"`
 }
 
 type Repository interface {
-	GetConfig(ctx context.Context) (*PlatformConfig, error)
+	GetConfig(ctx context.Context) (*Config, error)
 	UpdateTierConfig(ctx context.Context, tier string, config PricingConfig) error
 }
 
@@ -34,15 +36,20 @@ func NewRepository(db *sqlx.DB) Repository {
 	return &repositoryImpl{db: db}
 }
 
-func (r *repositoryImpl) GetConfig(ctx context.Context) (*PlatformConfig, error) {
+func (r *repositoryImpl) GetConfig(ctx context.Context) (*Config, error) {
 	rows, err := r.db.QueryContext(ctx,
 		`SELECT key, value FROM platform_config WHERE key IN ('pricing_free', 'pricing_standard', 'pricing_enterprise')`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get platform config: %w", err)
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}(rows)
 
-	cfg := &PlatformConfig{
+	cfg := &Config{
 		Free:       PricingConfig{BasePrice: 0, FreeAPICalls: 0, PricePerCall: 0},
 		Standard:   PricingConfig{BasePrice: 29, FreeAPICalls: 10000, PricePerCall: 0.001},
 		Enterprise: PricingConfig{BasePrice: 99, FreeAPICalls: 100000, PricePerCall: 0.0005},
