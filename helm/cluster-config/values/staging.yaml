@@ -1,4 +1,4 @@
 gcp:
-  projectID: "ornate-reef-501614-a1"
+  projectID: "staging-demo-502317"
   region: "europe-west1"
   clusterName: "trip-manager-prod"
