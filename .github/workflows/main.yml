@@ -31,6 +31,7 @@ jobs:
         backend-matrix: ${{ steps.set-matrix.outputs.matrix || steps.set-matrix-fallback.outputs.matrix }}
         backend-changed: ${{ steps.set-matrix.outputs.changed || steps.set-matrix-fallback.outputs.changed }}
         frontend-changed: ${{ steps.set-frontend.outputs.frontend_changed }}
+        helm-changed: ${{ steps.filter.outputs.helm }}
         registry: ${{ steps.set-registry.outputs.registry }}
     steps:
       - name: Checkout repository
@@ -47,6 +48,10 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+            helm:
+              - 'helm/**'
+              - 'helmfile.yaml.gotmpl'
+              - 'environments/**'
 
       - name: Set registry
         id: set-registry
@@ -179,12 +184,12 @@ jobs:
 
 
   deploy:
-    needs: [ build-backend, build-frontend ]
+    needs: [ build-backend, build-frontend, discover-services ]
     if: |
       always() &&
       (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
       (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') &&
-      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success' || needs.discover-services.outputs.helm-changed == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
