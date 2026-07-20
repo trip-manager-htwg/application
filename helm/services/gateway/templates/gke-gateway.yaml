@@ -6,6 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     networking.gke.io/certmap: "{{ .Values.ingress.certMap | default "trip-manager-cert-map" }}"
+    networking.gke.io/load-balancer-ip: "{{ .Values.ingress.staticIP }}"
 spec:
   gatewayClassName: gke-l7-global-external-managed
   listeners:

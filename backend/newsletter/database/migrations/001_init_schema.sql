@@ -1,10 +1,8 @@
-ALTER TABLE newsletters ENABLE ROW LEVEL SECURITY;
-DO $$ BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies
-        WHERE tablename = 'newsletters' AND policyname = 'tenant_isolation_newsletters'
-    ) THEN
-        CREATE POLICY tenant_isolation_newsletters ON newsletters
-            USING (tenant_id = current_setting('app.tenant_id', true));
-    END IF;
-END $$;
+CREATE TABLE IF NOT EXISTS newsletters
+(
+    firebase_uid VARCHAR(255) NOT NULL,
+    tenant_id    VARCHAR(255) NOT NULL,
+    content      JSONB        NOT NULL,
+    generated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (firebase_uid, tenant_id)
+);

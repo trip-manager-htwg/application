@@ -3,6 +3,7 @@ ingress:
   className: gke-l7-global-external-managed
   host: neatnode.xyz
   apiHost: api.neatnode.xyz
-  certMap: trip-manager-cert-map
+  certMap: trip-manager-prod-cert-map
+  staticIP: 34.111.234.48
 imagePullSecrets:
   - name: ghcr-secret

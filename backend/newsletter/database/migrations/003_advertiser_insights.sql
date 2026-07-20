@@ -1,21 +1,9 @@
-ALTER TABLE newsletters
-    FORCE ROW LEVEL SECURITY;
-ALTER TABLE advertiser_insights
-    FORCE ROW LEVEL SECURITY;
-
-DO
-$inner$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'newsletter_app') THEN
-            EXECUTE format('CREATE USER newsletter_app WITH PASSWORD %%L', '%s');
-        END IF;
-    END
-$inner$;
-GRANT CONNECT ON DATABASE newsletter TO newsletter_app;
-GRANT USAGE ON SCHEMA public TO newsletter_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO newsletter_app;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO newsletter_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO newsletter_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT USAGE, SELECT ON SEQUENCES TO newsletter_app;
+CREATE TABLE IF NOT EXISTS advertiser_insights
+(
+    advertiser_id VARCHAR(255) NOT NULL,
+    tenant_id     VARCHAR(255) NOT NULL,
+    content       JSONB        NOT NULL,
+    generated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (advertiser_id, tenant_id)
+);
+CREATE INDEX IF NOT EXISTS idx_advertiser_insights_advertiser ON advertiser_insights (advertiser_id);
