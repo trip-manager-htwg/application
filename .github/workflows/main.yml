@@ -202,12 +202,21 @@ jobs:
           else
             ENV="staging"
           fi
-          SHA="${{ github.sha }}"
-          TAG="sha-${SHA}"
           echo "environment=$ENV" >> $GITHUB_OUTPUT
-          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
-          echo "sha=$SHA" >> $GITHUB_OUTPUT
-          echo "Deploying SHA: $SHA to $ENV"
+          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Set image tag
+        id: image-tag
+        run: |
+          if [ "${{ needs.build-backend.result }}" = "success" ] || [ "${{ needs.build-frontend.result }}" = "success" ]; then
+            echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            TOKEN=$(echo -n "trip-manager-htwg:${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
+            TAG=$(curl -s -H "Authorization: Bearer $TOKEN" \
+              https://ghcr.io/v2/trip-manager-htwg/backend/auth/tags/list \
+              | jq -r '[.tags[] | select(startswith("sha-"))] | sort | last')
+            echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+          fi
 
       - name: Checkout source
         uses: actions/checkout@v4
