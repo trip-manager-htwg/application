@@ -211,7 +211,7 @@ jobs:
           if [ "${{ needs.build-backend.result }}" = "success" ] || [ "${{ needs.build-frontend.result }}" = "success" ]; then
             echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
           else
-            TOKEN=$(echo -n "trip-manager-htwg:${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
+            TOKEN=$(echo -n "trip-manager-htwg:${{ secrets.GITHUB_TOKEN }}" | base64)
             TAG=$(curl -s -H "Authorization: Bearer $TOKEN" \
               https://ghcr.io/v2/trip-manager-htwg/backend/auth/tags/list \
               | jq -r '[.tags[] | select(startswith("sha-"))] | sort | last')
@@ -246,7 +246,7 @@ jobs:
 
       - name: Render manifests
         env:
-          IMAGE_TAG: ${{ steps.ctx.outputs.image_tag }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.image_tag }}
           ENVIRONMENT: ${{ steps.ctx.outputs.environment }}
         working-directory: source
         run: |
