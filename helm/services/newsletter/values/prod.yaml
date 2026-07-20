@@ -58,3 +58,5 @@ env:
 
 serviceAccount:
   gcpServiceAccount: "newsletter-sa@ornate-reef-501614-a1.iam.gserviceaccount.com"
+imagePullSecrets:
+  - name: ghcr-secret

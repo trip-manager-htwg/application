@@ -57,3 +57,5 @@ env:
 
 serviceAccount:
   gcpServiceAccount: "trips-sa@staging-demo-502317.iam.gserviceaccount.com"
+imagePullSecrets:
+  - name: ghcr-secret

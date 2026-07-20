@@ -4,3 +4,5 @@ ingress:
   host: neatnode.xyz
   apiHost: api.neatnode.xyz
   certMap: trip-manager-cert-map
+imagePullSecrets:
+  - name: ghcr-secret

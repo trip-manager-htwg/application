@@ -35,3 +35,5 @@ externalSecrets:
 
 serviceAccount:
   gcpServiceAccount: ""
+
+imagePullSecrets: []

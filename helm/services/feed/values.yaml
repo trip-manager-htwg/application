@@ -34,3 +34,5 @@ env:
 externalSecrets:
   enabled: false
   secrets: []
+
+imagePullSecrets: []

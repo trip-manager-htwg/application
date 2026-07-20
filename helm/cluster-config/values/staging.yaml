@@ -1,4 +1,4 @@
 gcp:
   projectID: "staging-demo-502317"
   region: "europe-west1"
-  clusterName: "trip-manager-prod"
+  clusterName: "trip-manager-staging"

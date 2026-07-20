@@ -4,3 +4,5 @@ ingress:
   host: staging.neatnode.xyz
   apiHost: api.staging.neatnode.xyz
   certMap: trip-manager-staging-cert-map
+imagePullSecrets:
+  - name: ghcr-secret

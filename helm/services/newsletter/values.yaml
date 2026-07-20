@@ -43,3 +43,5 @@ serviceAccount:
 externalSecrets:
   enabled: false
   secrets: []
+
+imagePullSecrets: []

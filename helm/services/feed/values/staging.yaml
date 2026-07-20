@@ -34,3 +34,5 @@ envFrom:
 
 serviceAccount:
   gcpServiceAccount: "feed-sa@staging-demo-502317.iam.gserviceaccount.com"
+imagePullSecrets:
+  - name: ghcr-secret

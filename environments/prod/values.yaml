@@ -8,3 +8,5 @@ feed:
   enabled: true
 newsletter:
   enabled: true
+imagePullSecrets:
+  - name: ghcr-secret
